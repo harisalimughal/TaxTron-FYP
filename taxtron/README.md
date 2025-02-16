@@ -1,8 +1,11 @@
-# React + Vite
+# BlockChain based Vehicle Registration and Taxation System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+- Install Node & npm
+- Go to [Download Ganache](https://github.com/trufflesuite/ganache-ui/releases), and download .appx file for windows
+- `npm install -g truffle` installation for smart contract
+- `npm install web3` for blockchain integration
+- `truffle compile` to compile the contact
+- `cd backend truffle migrate --reset --network development` to deploy contract
+- `cd frontend npm run dev` to start frontend
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh

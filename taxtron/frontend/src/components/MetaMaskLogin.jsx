@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import Web3 from 'web3';
 
-const MetaMaskLogin = () => {
-  const [account, setAccount] = useState('');
+const MetaMaskLogin = ({ setAccount }) => { // Receive setAccount from parent
   const [error, setError] = useState('');
 
   const connectWallet = async () => {
@@ -10,8 +9,7 @@ const MetaMaskLogin = () => {
       if (typeof window.ethereum !== 'undefined') {
         // Request account access
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const web3 = new Web3(window.ethereum);
-        setAccount(accounts[0]);
+        setAccount(accounts[0]); // Update the account in the parent component
         setError('');
       } else {
         setError('Please install MetaMask!');
@@ -40,12 +38,7 @@ const MetaMaskLogin = () => {
         Continue with MetaMask
       </button>
 
-      {/* Display connected account or error */}
-      {account && (
-        <p className="mt-4 text-green-600">
-          Connected: {account.slice(0, 6)}...{account.slice(-4)}
-        </p>
-      )}
+      {/* Display error message */}
       {error && (
         <p className="mt-4 text-red-600">{error}</p>
       )}

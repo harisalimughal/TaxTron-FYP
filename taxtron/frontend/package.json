@@ -2,12 +2,12 @@
   "name": "taxtron",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "copy-abi": "cp ../backend/build/contracts/VehicleRegistry.json ./src/contractABI.json"
   },
   "dependencies": {
     "react": "^19.0.0",

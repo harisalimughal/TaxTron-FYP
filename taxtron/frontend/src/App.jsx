@@ -1,12 +1,30 @@
-import React from 'react';
-import MetaMaskLogin from './components/MetaMaskLogin';
+import React, { useEffect, useState } from "react";
+import contract from "./utils/contract";
+import web3 from "./utils/web3";
+import MetaMaskLogin from "./components/MetaMaskLogin";
+import RegisterVehicle from "./components/RegisterVehicle";
+import ViewVehicle from "./components/ViewVehicle";
 
-function App() {
+const App = () => {
+  const [account, setAccount] = useState("");
+
+  useEffect(() => {
+    const loadAccount = async () => {
+      const accounts = await web3.eth.getAccounts();
+      setAccount(accounts[0]); // Save the user's MetaMask address
+    };
+
+    loadAccount();
+  }, []);
+
   return (
-    <div className="App">
-      <MetaMaskLogin />
+    <div>
+      <h1>Connected Account: {account}</h1>
+      <MetaMaskLogin setAccount={setAccount} />
+      <RegisterVehicle account={account} />
+      <ViewVehicle />
     </div>
   );
-}
+};
 
 export default App;
