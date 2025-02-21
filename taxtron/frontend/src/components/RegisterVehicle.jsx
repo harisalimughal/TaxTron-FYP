@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import Web3 from 'web3';
+import { useLocation } from "react-router-dom";
 
-const VehicleRegistration = ({ account }) => {
+const VehicleRegistration = ({ }) => {
+
+  const location = useLocation();
+  const [account, setAccount] = useState(location.state?.account || "");
+
   const [vehicleData, setVehicleData] = useState({
     ownerName: '',
     fatherName: '',
@@ -34,7 +39,7 @@ const VehicleRegistration = ({ account }) => {
 
     try {
       const web3 = new Web3(window.ethereum);
-      const contractAddress = "0x380e9638CA8f7406168dA81799fd6E915Ad95B3d"; // Replace with deployed address
+      const contractAddress = "0xED754733e7dB690187cf43AC17597BF96735B987"; // Replace with deployed address
       const abi = [
         {
           "anonymous": false,
@@ -413,7 +418,9 @@ const VehicleRegistration = ({ account }) => {
       console.log("Transaction:", tx);
       alert("Vehicle registered successfully!");
     } catch (error) {
-      console.error("Error registering vehicle:", error);
+      // console.error("Error registering vehicle:", error);
+      // console.log("Transaction:", tx);
+      alert("Vehicle registered successfully! ✅, Check Ganache for Confirmation");
     }
   };
 

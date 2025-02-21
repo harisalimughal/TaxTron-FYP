@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import Web3 from 'web3';
+import { useNavigate } from "react-router-dom";
 
 const MetaMaskLogin = ({ setAccount }) => { // Receive setAccount from parent
   const [error, setError] = useState('');
-
+  const navigate = useNavigate();
   const connectWallet = async () => {
     try {
       if (typeof window.ethereum !== 'undefined') {
         // Request account access
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         setAccount(accounts[0]); // Update the account in the parent component
+        navigate("/dashboard");
         setError('');
       } else {
         setError('Please install MetaMask!');
