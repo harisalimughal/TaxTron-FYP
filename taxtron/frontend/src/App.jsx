@@ -23,8 +23,8 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LandingPage account={account} />} />
-        <Route path="/login" element={<MetaMaskLogin setAccount={setAccount} />} />
+        {/* <Route path="/" element={<LandingPage account={account} />} /> */}
+        <Route path="/" element={<MetaMaskLogin setAccount={setAccount} />} />
         <Route path="/dashboard" element={account ? <Dashboard account={account} /> : <Navigate to="/login" />} />
         <Route path="/register" element={<RegisterVehicle />} />
       </Routes>
