@@ -5,7 +5,7 @@
 - `npm install -g truffle` installation for smart contract
 - `npm install web3` for blockchain integration
 - `truffle compile` to compile the contact
-- `cd backend truffle migrate --reset --network development` to deploy contract
-- `cd frontend npm run dev` to start frontend
+- `cd backend` > `npx truffle migrate --reset --network development` to deploy contract
+- `cd frontend` > `npm run dev` to start frontend
 
 

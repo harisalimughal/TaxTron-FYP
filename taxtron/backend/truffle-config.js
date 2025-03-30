@@ -8,15 +8,14 @@ module.exports = {
   },
   compilers: {
     solc: {
-      version: "0.8.20",  // Keep your Solidity version
+      version: "0.8.17",  // Use a more compatible version
       settings: {
         optimizer: {
           enabled: true,
           runs: 200
         },
-        viaIR: true  // Enable Intermediate Representation
+        viaIR: true  // Re-enable IR to fix "stack too deep" error
       }
     }
   }
-  
 };
