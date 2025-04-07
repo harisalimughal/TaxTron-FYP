@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import Web3 from 'web3';
 import { useLocation } from "react-router-dom";
+import axios from 'axios';
 
 const VehicleRegistration = () => {
   const location = useLocation();
   const [account, setAccount] = useState(location.state?.account || "");
+  const [isUploading, setIsUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const [vehicleData, setVehicleData] = useState({
     ownerName: '',
@@ -19,25 +23,107 @@ const VehicleRegistration = () => {
     manufacturingYear: '',
     registrationYear: '',
     vehicleType: '',
-    fuelType: ''
+    fuelType: '',
+    imageUrl: ''
   });
 
   const handleChange = (e) => {
     setVehicleData({ ...vehicleData, [e.target.name]: e.target.value });
   };
 
+  // Connect to MetaMask
+  const connectWallet = async () => {
+    if (window.ethereum) {
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        setAccount(accounts[0]);
+        return accounts[0];
+      } catch (error) {
+        console.error("Error connecting to MetaMask", error);
+        alert("Error connecting to MetaMask: " + error.message);
+      }
+    } else {
+      alert("Please install MetaMask to use this feature!");
+    }
+  };
+
+  // Handle image selection (just preview, don't upload yet)
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Store the file for later upload
+    setSelectedFile(file);
+
+    // Create a preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Upload the image to Cloudinary
+  const uploadImage = async () => {
+    if (!selectedFile) {
+      alert("Please select a vehicle image before registering.");
+      return null;
+    }
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('upload_preset', 'vehicle_nft');
+
+    try {
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/harrycloudinary/image/upload`,
+        formData
+      );
+      
+      setIsUploading(false);
+      console.log("Image uploaded successfully:", response.data.secure_url);
+      return response.data.secure_url;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Error uploading image. Please try again.");
+      setIsUploading(false);
+      return null;
+    }
+  };
+
   const registerVehicle = async () => {
-    if (!account) {
-      alert("Please connect MetaMask first!");
+    let currentAccount = account;
+    
+    if (!currentAccount) {
+      currentAccount = await connectWallet();
+      if (!currentAccount) {
+        alert("Please connect MetaMask first!");
+        return;
+      }
+    }
+
+    if (!selectedFile && !vehicleData.imageUrl) {
+      alert("Please select a vehicle image before registering.");
       return;
+    }
+
+    // First upload the image if not already uploaded
+    let imageUrl = vehicleData.imageUrl;
+    if (!imageUrl) {
+      imageUrl = await uploadImage();
+      if (!imageUrl) return; // Exit if image upload failed
+      
+      // Update the state with the image URL
+      setVehicleData({ ...vehicleData, imageUrl });
     }
 
     try {
       const web3 = new Web3(window.ethereum);
-      const contractAddress = "0x93efa469c0fe0F8dC635b8Ae152EF31bb92649DF"; // Replace with deployed address
+      const contractAddress = "0x93efa469c0fe0F8dC635b8Ae152EF31bb92649DF";
       
-      // Updated ABI to match the contract structure
       const abi = [
+        // ABI stays the same
         {
           "anonymous": false,
           "inputs": [
@@ -269,20 +355,78 @@ const VehicleRegistration = () => {
       // Send the transaction with the struct
       const tx = await contract.methods
         .registerVehicle(vehicleInput)
-        .send({ from: account, gas: 3000000 });
+        .send({ from: currentAccount, gas: 3000000 });
         
       console.log("Transaction:", tx);
-      alert("Vehicle registered successfully!");
+      console.log("Vehicle registered with image URL:", imageUrl);
+      
+      alert("Vehicle registered successfully with image!");
     } catch (error) {
       console.error("Error registering vehicle:", error);
       alert("Error registering vehicle: " + error.message);
     }
   };
 
-  // Improved UI with better styling
+  // Store metadata for NFT creation
+  const prepareNftMetadata = () => {
+    // This function would prepare the metadata for NFT creation
+    const metadata = {
+      name: `Vehicle ${vehicleData.registrationNumber}`,
+      description: `${vehicleData.make} ${vehicleData.model} ${vehicleData.variant}`,
+      image: vehicleData.imageUrl,
+      attributes: [
+        { trait_type: "Make", value: vehicleData.make },
+        { trait_type: "Model", value: vehicleData.model },
+        { trait_type: "Registration Number", value: vehicleData.registrationNumber },
+        { trait_type: "Year", value: vehicleData.manufacturingYear },
+        { trait_type: "Engine Number", value: vehicleData.engineNumber },
+        { trait_type: "Chassis Number", value: vehicleData.chassisNumber }
+      ]
+    };
+    
+    return metadata;
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-6">Register Vehicle</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Register Vehicle</h2>
+        <button 
+          onClick={connectWallet} 
+          className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded font-medium transition duration-200"
+        >
+          {account ? `Connected: ${account.substring(0, 6)}...${account.substring(38)}` : "Connect Wallet"}
+        </button>
+      </div>
+      
+      {/* Image Upload Section with Smaller Preview */}
+      <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+        <h3 className="text-lg font-semibold mb-2">Vehicle Image</h3>
+        <div className="flex items-start space-x-4">
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-1">Select Vehicle Photo</label>
+            <input 
+              type="file" 
+              accept="image/*"
+              onChange={handleImageSelect}
+              className="w-full p-2 border rounded" 
+            />
+            <p className="text-sm text-gray-500 mt-1">Image will be uploaded when you click "Register Vehicle"</p>
+          </div>
+          {/* Smaller image preview container */}
+          <div style={{ width: '500px', height: '500px' }} className="bg-gray-200 rounded flex items-center justify-center overflow-hidden">
+  {imagePreview ? (
+    <img 
+      src={imagePreview} 
+      alt="Vehicle preview" 
+      style={{ maxWidth: '100%', maxHeight: '100%' }}
+    />
+  ) : (
+    <span className="text-gray-400 text-xs text-center">No image</span>
+  )}
+</div>
+        </div>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Personal Information */}
@@ -446,9 +590,14 @@ const VehicleRegistration = () => {
       <div className="mt-6">
         <button 
           onClick={registerVehicle} 
-          className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded font-medium transition duration-200"
+          disabled={isUploading}
+          className={`${
+            isUploading 
+              ? 'bg-gray-400 cursor-not-allowed' 
+              : 'bg-blue-500 hover:bg-blue-600'
+          } text-white px-6 py-2 rounded font-medium transition duration-200`}
         >
-          Register Vehicle
+          {isUploading ? 'Uploading & Registering...' : 'Register Vehicle'}
         </button>
       </div>
     </div>
