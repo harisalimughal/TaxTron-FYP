@@ -369,7 +369,6 @@ const VehicleRegistration = () => {
 
   // Store metadata for NFT creation
   const prepareNftMetadata = () => {
-    // This function would prepare the metadata for NFT creation
     const metadata = {
       name: `Vehicle ${vehicleData.registrationNumber}`,
       description: `${vehicleData.make} ${vehicleData.model} ${vehicleData.variant}`,
@@ -388,217 +387,268 @@ const VehicleRegistration = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Register Vehicle</h2>
-        <button 
-          onClick={connectWallet} 
-          className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded font-medium transition duration-200"
-        >
-          {account ? `Connected: ${account.substring(0, 6)}...${account.substring(38)}` : "Connect Wallet"}
-        </button>
-      </div>
-      
-      {/* Image Upload Section with Smaller Preview */}
-      <div className="mb-6 bg-gray-50 p-4 rounded-lg">
-        <h3 className="text-lg font-semibold mb-2">Vehicle Image</h3>
-        <div className="flex items-start space-x-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium mb-1">Select Vehicle Photo</label>
-            <input 
-              type="file" 
-              accept="image/*"
-              onChange={handleImageSelect}
-              className="w-full p-2 border rounded" 
-            />
-            <p className="text-sm text-gray-500 mt-1">Image will be uploaded when you click "Register Vehicle"</p>
-          </div>
-          {/* Smaller image preview container */}
-          <div style={{ width: '500px', height: '500px' }} className="bg-gray-200 rounded flex items-center justify-center overflow-hidden">
-  {imagePreview ? (
-    <img 
-      src={imagePreview} 
-      alt="Vehicle preview" 
-      style={{ maxWidth: '100%', maxHeight: '100%' }}
-    />
-  ) : (
-    <span className="text-gray-400 text-xs text-center">No image</span>
-  )}
-</div>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Personal Information */}
-        <div className="col-span-2 bg-gray-50 p-4 rounded-lg mb-4">
-          <h3 className="text-lg font-semibold mb-2">Owner Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Owner Name</label>
-              <input 
-                type="text" 
-                name="ownerName" 
-                value={vehicleData.ownerName} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded" 
-                required 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Father Name</label>
-              <input 
-                type="text" 
-                name="fatherName" 
-                value={vehicleData.fatherName} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded" 
-                required 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">CNIC</label>
-              <input 
-                type="text" 
-                name="cnic" 
-                value={vehicleData.cnic} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded" 
-                required 
-              />
-            </div>
+    <div className="bg-gray-900 min-h-screen text-white">
+      <div className="max-w-5xl mx-auto p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Register Vehicle</h2>
+          <div className="flex items-center">
+            <button 
+              onClick={connectWallet}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition duration-200"
+            >
+              {account ? `ConnectedAccount: ${account.substring(0, 6)}...${account.substring(38)}` : "Connect Wallet"}
+            </button>
+            <button
+              className="ml-4 text-blue-400 hover:text-blue-300 transition duration-200"
+              onClick={() => window.history.back()}
+            >
+              &lt; Back
+            </button>
           </div>
         </div>
 
-        {/* Vehicle Information */}
-        <div className="col-span-2 bg-gray-50 p-4 rounded-lg mb-4">
-          <h3 className="text-lg font-semibold mb-2">Vehicle Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Left Column - Vehicle Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold mb-2">Vehicle Information</h3>
+            
             <div>
-              <label className="block text-sm font-medium mb-1">Registration Number</label>
+              <label className="block text-sm text-gray-400 mb-1">Registration Number</label>
               <input 
                 type="text" 
                 name="registrationNumber" 
                 value={vehicleData.registrationNumber} 
                 onChange={handleChange} 
-                className="w-full p-2 border rounded" 
+                className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white" 
                 required 
               />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium mb-1">Engine Number</label>
+              <label className="block text-sm text-gray-400 mb-1">Engine Number</label>
               <input 
                 type="text" 
                 name="engineNumber" 
                 value={vehicleData.engineNumber} 
                 onChange={handleChange} 
-                className="w-full p-2 border rounded" 
+                className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white" 
                 required 
               />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium mb-1">Chassis Number</label>
+              <label className="block text-sm text-gray-400 mb-1">Chassis Number</label>
               <input 
                 type="text" 
                 name="chassisNumber" 
                 value={vehicleData.chassisNumber} 
                 onChange={handleChange} 
-                className="w-full p-2 border rounded" 
+                className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white" 
                 required 
               />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium mb-1">Make</label>
+              <label className="block text-sm text-gray-400 mb-1">Make</label>
               <input 
                 type="text" 
                 name="make" 
                 value={vehicleData.make} 
                 onChange={handleChange} 
-                className="w-full p-2 border rounded" 
+                className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white" 
                 required 
               />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium mb-1">Model</label>
+              <label className="block text-sm text-gray-400 mb-1">Model</label>
               <input 
                 type="text" 
                 name="model" 
                 value={vehicleData.model} 
                 onChange={handleChange} 
-                className="w-full p-2 border rounded" 
+                className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white" 
                 required 
               />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium mb-1">Variant</label>
+              <label className="block text-sm text-gray-400 mb-1">Variant</label>
               <input 
                 type="text" 
                 name="variant" 
                 value={vehicleData.variant} 
                 onChange={handleChange} 
-                className="w-full p-2 border rounded" 
+                className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white" 
                 required 
               />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium mb-1">Manufacturing Year</label>
+              <label className="block text-sm text-gray-400 mb-1">Manufacturing Year</label>
               <input 
                 type="number" 
                 name="manufacturingYear" 
                 value={vehicleData.manufacturingYear} 
                 onChange={handleChange} 
-                className="w-full p-2 border rounded" 
+                className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white" 
                 required 
               />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium mb-1">Registration Year</label>
+              <label className="block text-sm text-gray-400 mb-1">Registration Year</label>
               <input 
                 type="number" 
                 name="registrationYear" 
                 value={vehicleData.registrationYear} 
                 onChange={handleChange} 
-                className="w-full p-2 border rounded" 
+                className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white" 
                 required 
               />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium mb-1">Vehicle Type</label>
-              <input 
-                type="text" 
-                name="vehicleType" 
-                value={vehicleData.vehicleType} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded" 
-                required 
-              />
+              <label className="block text-sm text-gray-400 mb-1">Vehicle Type</label>
+              <div className="relative">
+                <select 
+                  name="vehicleType" 
+                  value={vehicleData.vehicleType} 
+                  onChange={handleChange} 
+                  className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white appearance-none" 
+                  required
+                >
+                  <option value="">Select type</option>
+                  <option value="car">Car</option>
+                  <option value="motorcycle">Motorcycle</option>
+                  <option value="truck">Truck</option>
+                  <option value="bus">Bus</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <svg className="w-4 h-4 fill-current text-gray-400" viewBox="0 0 20 20">
+                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
             </div>
+            
             <div>
-              <label className="block text-sm font-medium mb-1">Fuel Type</label>
-              <input 
-                type="text" 
-                name="fuelType" 
-                value={vehicleData.fuelType} 
-                onChange={handleChange} 
-                className="w-full p-2 border rounded" 
-                required 
-              />
+              <label className="block text-sm text-gray-400 mb-1">Fuel Type</label>
+              <div className="relative">
+                <select 
+                  name="fuelType" 
+                  value={vehicleData.fuelType} 
+                  onChange={handleChange} 
+                  className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white appearance-none" 
+                  required
+                >
+                  <option value="">Select fuel</option>
+                  <option value="petrol">Petrol</option>
+                  <option value="diesel">Diesel</option>
+                  <option value="electric">Electric</option>
+                  <option value="hybrid">Hybrid</option>
+                  <option value="cng">CNG</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <svg className="w-4 h-4 fill-current text-gray-400" viewBox="0 0 20 20">
+                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Right Column - Owner Information & Image Upload */}
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Owner Information</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Owner Name</label>
+                  <input 
+                    type="text" 
+                    name="ownerName" 
+                    value={vehicleData.ownerName} 
+                    onChange={handleChange} 
+                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white" 
+                    required 
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Father Name</label>
+                  <input 
+                    type="text" 
+                    name="fatherName" 
+                    value={vehicleData.fatherName} 
+                    onChange={handleChange} 
+                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white" 
+                    required 
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">CNIC</label>
+                  <input 
+                    type="text" 
+                    name="cnic" 
+                    value={vehicleData.cnic} 
+                    onChange={handleChange} 
+                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white" 
+                    required 
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Vehicle Image</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Select Vehicle Photo</label>
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white text-sm" 
+                  />
+                </div>
+                
+                {/* Image preview */}
+                <div className="bg-gray-800 rounded-md p-3 flex items-center justify-center border border-gray-700" style={{ height: "200px" }}>
+                  {imagePreview ? (
+                    <img 
+                      src={imagePreview} 
+                      alt="Vehicle preview" 
+                      className="max-h-full max-w-full object-contain" 
+                    />
+                  ) : (
+                    <div className="text-gray-500 text-center">
+                      <svg className="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                      <p>No image selected</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="mt-6">
-        <button 
-          onClick={registerVehicle} 
-          disabled={isUploading}
-          className={`${
-            isUploading 
-              ? 'bg-gray-400 cursor-not-allowed' 
-              : 'bg-blue-500 hover:bg-blue-600'
-          } text-white px-6 py-2 rounded font-medium transition duration-200`}
-        >
-          {isUploading ? 'Uploading & Registering...' : 'Register Vehicle'}
-        </button>
+        <div className="mt-8 flex justify-center">
+          <button 
+            onClick={registerVehicle} 
+            disabled={isUploading}
+            className={`${
+              isUploading 
+                ? 'bg-gray-600 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700'
+            } text-white px-10 py-2 rounded-md font-medium transition duration-200 w-48`}
+          >
+            {isUploading ? 'Processing...' : 'Register'}
+          </button>
+        </div>
       </div>
     </div>
   );
