@@ -1,25 +1,8 @@
-// import React from "react";
-// import { useNavigate } from "react-router-dom";
-
-// const Dashboard = ({ account }) => {
-//   const navigate = useNavigate();
-
-//   return (
-//     <div>
-//       <h1>Welcome to Dashboard</h1>
-//       <p>Connected Account: {account}</p>
-//       <button onClick={() => navigate("/register", { state: { account } })}>
-//         Register Vehicle
-//       </button>
-//     </div>
-//   );
-// };
-
-// export default Dashboard;
-
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "axios";
+
 
 const Dashboard = ({ account }) => {
   const navigate = useNavigate();
@@ -27,6 +10,34 @@ const Dashboard = ({ account }) => {
   const handleServiceSelection = (path) => {
     navigate(path, { state: { account } });
   };
+  const [inspectionData, setInspectionData] = useState([]);
+
+  useEffect(() => {
+    const fetchInspectionStatus = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/inspections/wallet/${account}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
+        });
+
+        console.log(res);
+  
+        // Ensure the response is an array
+        if (Array.isArray(res.data.data)) {
+          setInspectionData(res.data.data);
+        } else {
+          console.error("Unexpected inspection data:", res.data);
+          setInspectionData([]); // fallback to empty array
+        }
+      } catch (err) {
+        console.error("Failed to fetch inspection data:", err);
+        setInspectionData([]); // fallback to empty array in case of error
+      }
+    };
+  
+    fetchInspectionStatus();
+  }, []);
+  
+
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
@@ -93,6 +104,55 @@ const Dashboard = ({ account }) => {
           
         </div>
         <div><h2 className="text-xl font-semibold mb-8 text-center">Pick a service to continue</h2> </div>
+        <div className="bg-gray-800 p-4 rounded-md border border-indigo-500/30 mb-6">
+  <h3 className="text-lg mb-2 text-indigo-400 font-semibold">Vehicle Inspection Status</h3>
+  {inspectionData.length === 0 ? (
+    <p className="text-gray-400">No inspection records found.</p>
+  ) : (
+    <ul className="space-y-4">
+      {inspectionData.map((v, idx) => (
+        <li key={idx} className="p-3 border border-gray-700 rounded-md">
+          <div className="flex justify-between items-center mb-1">
+            <span className="font-medium text-white">Vehicle Owner: {v.vehicleDetails?.ownerName || "N/A"}</span>
+            <span className={`font-medium ${
+              v.status === 'Approved' || v.status === 'Accepted' ? 'text-green-500' :
+              v.status === 'Rejected' ? 'text-red-500' :
+              v.status === 'Pending' ? 'text-yellow-400' :
+              'text-gray-400' }`}>
+              {v.status}
+              {v.status === 'Accepted' && (
+                <a
+                  href="/Pay Fee"
+                  className="ml-4 text-sm underline text-blue-400 hover:text-blue-300"
+                >
+                  View NFT
+                </a>
+              )}
+            </span>
+
+          </div>
+
+          <p className="text-sm text-gray-400">Inspection ID: {v.inspectionId}</p>
+          <p className="text-sm text-gray-400">Appointment: {v.appointmentDetails?.date} at {v.appointmentDetails?.time}</p>
+
+          {v.status === 'Approved' && (
+            <div className="mt-2">
+              <a 
+                href={`/pay-fee/${v._id}`} 
+                className="inline-block text-md text-blue-300 hover:underline"
+              >
+                Please Pay the Registeration Fee here →
+              </a>
+            </div>
+          )}
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
+
+
+
         
         <div className=" ml-16">
 

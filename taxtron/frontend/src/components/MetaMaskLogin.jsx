@@ -116,7 +116,7 @@ const MetaMaskLogin = ({ setAccount }) => { // Receive setAccount from parent
         
         {/* Help text */}
         <p className="text-gray-400 text-xs text-center">
-          Don't have a wallet? <a href="#" className="text-blue-400 hover:underline">Get started here.</a>
+          Don't have a wallet? <a href="https://microsoftedge.microsoft.com/addons/detail/metamask/ejbalbakoplchlghecdalmeeeajnimhm?refid=bingshortanswersdownload" className="text-blue-400 hover:underline">Get started here.</a>
         </p>
       </div>
       

@@ -1,0 +1,294 @@
+.fee-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.fee-card {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.fee-card h2 {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 30px;
+  font-size: 2.2em;
+  font-weight: 600;
+}
+
+/* Vehicle Details Section */
+.vehicle-details {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border-left: 4px solid #3498db;
+}
+
+.vehicle-details h3 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-size: 1.4em;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.detail-item .label {
+  font-weight: 600;
+  color: #495057;
+}
+
+.detail-item .value {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+/* Fee Breakdown Section */
+.fee-breakdown {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+  color: white;
+}
+
+.fee-breakdown h3 {
+  margin-bottom: 20px;
+  font-size: 1.4em;
+}
+
+.fee-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.fee-item:last-child {
+  border-bottom: none;
+}
+
+.total-fee {
+  font-size: 1.2em;
+  font-weight: 700;
+  margin-top: 10px;
+  padding-top: 15px;
+  border-top: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.fee-label {
+  font-weight: 500;
+}
+
+.fee-value {
+  font-weight: 600;
+  font-size: 1.1em;
+}
+
+/* Wallet Section */
+.wallet-section {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.connect-wallet-btn {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 25px;
+  font-size: 1.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+}
+
+.connect-wallet-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(240, 147, 251, 0.4);
+}
+
+.wallet-info {
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #e8f5e8;
+  border-radius: 8px;
+  color: #2d5a2d;
+  font-weight: 500;
+}
+
+/* Payment Section */
+.payment-section {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.pay-btn {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+  border: none;
+  padding: 18px 40px;
+  border-radius: 30px;
+  font-size: 1.2em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 20px rgba(79, 172, 254, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pay-btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+}
+
+.pay-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Payment Success */
+.payment-success {
+  text-align: center;
+  padding: 25px;
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  border-radius: 15px;
+  margin-bottom: 20px;
+}
+
+.success-icon {
+  font-size: 3em;
+  margin-bottom: 10px;
+}
+
+.payment-success h3 {
+  color: #2d5a2d;
+  margin-bottom: 10px;
+  font-size: 1.5em;
+}
+
+.payment-success p {
+  color: #2d5a2d;
+  margin-bottom: 5px;
+}
+
+.tx-hash {
+  font-family: monospace;
+  font-size: 0.9em;
+  background: rgba(255, 255, 255, 0.5);
+  padding: 8px;
+  border-radius: 5px;
+  word-break: break-all;
+}
+
+/* NFT Section */
+.nft-section {
+  text-align: center;
+}
+
+.nft-btn {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  color: #8b4513;
+  border: none;
+  padding: 15px 35px;
+  border-radius: 25px;
+  font-size: 1.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(252, 182, 159, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nft-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(252, 182, 159, 0.4);
+}
+
+/* Error and Loading States */
+.error, .error-message {
+  color: #e74c3c;
+  text-align: center;
+  padding: 15px;
+  background: #fdf2f2;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.loading {
+  text-align: center;
+  padding: 50px;
+  font-size: 1.2em;
+  color: #6c757d;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .fee-container {
+    padding: 15px;
+  }
+  
+  .fee-card {
+    padding: 20px;
+  }
+  
+  .fee-card h2 {
+    font-size: 1.8em;
+  }
+  
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .fee-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .pay-btn, .nft-btn, .connect-wallet-btn {
+    width: 100%;
+    padding: 15px;
+  }
+}
+
+/* Animation for loading states */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.pay-btn:disabled {
+  animation: pulse 1.5s infinite;
+}

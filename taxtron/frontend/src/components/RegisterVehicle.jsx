@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Web3 from 'web3';
 import { useLocation } from "react-router-dom";
 import axios from 'axios';
@@ -6,15 +6,24 @@ import axios from 'axios';
 const VehicleRegistration = () => {
   const location = useLocation();
   const [account, setAccount] = useState(location.state?.account || "");
-  const [isUploading, setIsUploading] = useState(false);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [inspectionId, setInspectionId] = useState("");
+  const [inspectionSuccess, setInspectionSuccess] = useState(false);
+  
+  // Available dates and selected date
+  const [availableDates, setAvailableDates] = useState([]);
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [appointmentLoading, setAppointmentLoading] = useState(false);
+  const [appointmentError, setAppointmentError] = useState("");
+  const [appointmentSuccess, setAppointmentSuccess] = useState("");
+
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
+  const [isBooked, setIsBooked] = useState(false);
 
   const [vehicleData, setVehicleData] = useState({
     ownerName: '',
     fatherName: '',
     cnic: '',
-    registrationNumber: '',
     engineNumber: '',
     chassisNumber: '',
     make: '',
@@ -23,14 +32,95 @@ const VehicleRegistration = () => {
     manufacturingYear: '',
     registrationYear: '',
     vehicleType: '',
-    fuelType: '',
-    imageUrl: ''
+    fuelType: ''
   });
 
   const handleChange = (e) => {
     setVehicleData({ ...vehicleData, [e.target.name]: e.target.value });
   };
 
+  // Fetch available appointment dates on component mount
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+
+  // Generate a unique inspection ID when component mounts
+  useEffect(() => {
+    // Create unique ID based on timestamp and random number
+    const uniqueId = `INSP-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    setInspectionId(uniqueId);
+  }, []);
+
+  // Fetch available appointment dates
+  const fetchAppointments = async () => {
+    setAppointmentLoading(true);
+    setAppointmentError("");
+
+    try {
+        const response = await axios.get("http://localhost:5000/api/appointments");
+        console.log(response);
+
+        // Check if the response data is an empty array
+        if (response.data.length === 0 || response.data.every(appointment => appointment.status !== "Free")) {
+          setAvailableDates([]);
+          setAppointmentError("No Available Dates.")
+        } else {
+          const freeAppointments = response.data.filter(app => app.status === "Free");
+            const formattedAppointments = freeAppointments.map((appointment) => {
+            const fullDate = new Date(appointment.scheduledDate);
+                
+                return {
+                    id: appointment._id,
+                    date: fullDate.toISOString().split("T")[0], // YYYY-MM-DD
+                    time: fullDate.toISOString().split("T")[1].slice(0, 5), // HH:MM
+                    status: appointment.status
+                };
+            });
+
+            setAvailableDates(formattedAppointments);
+        }
+    } catch (error) {
+        console.error("Error fetching appointments:", error);
+        setAppointmentError("Failed to load appointments.");
+        setAvailableDates([]);
+    } finally {
+        setAppointmentLoading(false);
+    }
+  };
+  
+  const bookAppointment = async (id) => {
+    setAppointmentLoading(true);
+    if (!scheduledDate) {
+      setAppointmentError("Please select both date and time.");
+      return false;
+    }
+  
+    setAppointmentLoading(true);
+    setAppointmentError("");
+    setAppointmentSuccess("");
+  
+    try {
+      // Combine date + time into ISO string (e.g., "2025-05-15T10:30:00Z")
+      const scheduledDateISO = `${scheduledDate}T${selectedTimeSlot}:00Z`;
+      console.log("Booking Data:", scheduledDateISO);
+
+      const response = await axios.put(`http://localhost:5000/api/appointments/${id}/status`, {
+        status: 'Booked',
+        id: id
+      });      
+  
+      setAppointmentSuccess("Appointment booked successfully!");
+      setIsBooked(true);
+      return true;
+    } catch (error) {
+      console.error("Error booking appointment:", error);
+      setAppointmentError("Failed to book appointment.");
+      return false;
+    } finally {
+      setAppointmentLoading(false);
+    }
+  };
+  
   // Connect to MetaMask
   const connectWallet = async () => {
     if (window.ethereum) {
@@ -47,52 +137,7 @@ const VehicleRegistration = () => {
     }
   };
 
-  // Handle image selection (just preview, don't upload yet)
-  const handleImageSelect = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Store the file for later upload
-    setSelectedFile(file);
-
-    // Create a preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Upload the image to Cloudinary
-  const uploadImage = async () => {
-    if (!selectedFile) {
-      alert("Please select a vehicle image before registering.");
-      return null;
-    }
-
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-    formData.append('upload_preset', 'vehicle_nft');
-
-    try {
-      const response = await axios.post(
-        `https://api.cloudinary.com/v1_1/harrycloudinary/image/upload`,
-        formData
-      );
-      
-      setIsUploading(false);
-      console.log("Image uploaded successfully:", response.data.secure_url);
-      return response.data.secure_url;
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      alert("Error uploading image. Please try again.");
-      setIsUploading(false);
-      return null;
-    }
-  };
-
-  const registerVehicle = async () => {
+  const submitForInspection = async () => {
     let currentAccount = account;
     
     if (!currentAccount) {
@@ -103,294 +148,60 @@ const VehicleRegistration = () => {
       }
     }
 
-    if (!selectedFile && !vehicleData.imageUrl) {
-      alert("Please select a vehicle image before registering.");
+    const selectedAppointment = availableDates.find(
+      (item) => item.date === scheduledDate && item.time === selectedTimeSlot
+    );
+  
+    if (!selectedAppointment || !selectedAppointment.id) {
+      alert("Invalid appointment selection. Please try again.");
       return;
     }
 
-    // First upload the image if not already uploaded
-    let imageUrl = vehicleData.imageUrl;
-    if (!imageUrl) {
-      imageUrl = await uploadImage();
-      if (!imageUrl) return; // Exit if image upload failed
-      
-      // Update the state with the image URL
-      setVehicleData({ ...vehicleData, imageUrl });
+    // First, book the appointment
+    const appointmentBooked = await bookAppointment(selectedAppointment.id);
+    if (!appointmentBooked) {
+      return; // Exit if appointment booking failed
     }
+
+    setIsSubmitting(true);
 
     try {
-      const web3 = new Web3(window.ethereum);
-      const contractAddress = "0x93efa469c0fe0F8dC635b8Ae152EF31bb92649DF";
-      
-      const abi = [
-        // ABI stays the same
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": false,
-              "internalType": "string",
-              "name": "registrationNumber",
-              "type": "string"
-            },
-            {
-              "indexed": false,
-              "internalType": "address",
-              "name": "ownerWallet",
-              "type": "address"
-            }
-          ],
-          "name": "VehicleRegistered",
-          "type": "event"
+      // Prepare the inspection data
+      const inspectionData = {
+        inspectionId: inspectionId,
+        walletAddress: currentAccount,
+        vehicleDetails: {
+          ...vehicleData,
+          manufacturingYear: parseInt(vehicleData.manufacturingYear) || 0,
+          registrationYear: parseInt(vehicleData.registrationYear) || 0
         },
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": false,
-              "internalType": "string",
-              "name": "registrationNumber",
-              "type": "string"
-            },
-            {
-              "indexed": false,
-              "internalType": "address",
-              "name": "sender",
-              "type": "address"
-            }
-          ],
-          "name": "RegistrationAttempt",
-          "type": "event"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "string",
-              "name": "",
-              "type": "string"
-            }
-          ],
-          "name": "vehicles",
-          "outputs": [
-            {
-              "internalType": "address",
-              "name": "ownerWallet",
-              "type": "address"
-            },
-            {
-              "internalType": "string",
-              "name": "ownerName",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "fatherName",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "cnic",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "registrationNumber",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "engineNumber",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "chassisNumber",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "make",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "model",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "variant",
-              "type": "string"
-            },
-            {
-              "internalType": "uint256",
-              "name": "manufacturingYear",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "registrationYear",
-              "type": "uint256"
-            },
-            {
-              "internalType": "string",
-              "name": "vehicleType",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "fuelType",
-              "type": "string"
-            },
-            {
-              "internalType": "bool",
-              "name": "isRegistered",
-              "type": "bool"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "components": [
-                {
-                  "internalType": "string",
-                  "name": "ownerName",
-                  "type": "string"
-                },
-                {
-                  "internalType": "string",
-                  "name": "fatherName",
-                  "type": "string"
-                },
-                {
-                  "internalType": "string",
-                  "name": "cnic",
-                  "type": "string"
-                },
-                {
-                  "internalType": "string",
-                  "name": "registrationNumber",
-                  "type": "string"
-                },
-                {
-                  "internalType": "string",
-                  "name": "engineNumber",
-                  "type": "string"
-                },
-                {
-                  "internalType": "string",
-                  "name": "chassisNumber",
-                  "type": "string"
-                },
-                {
-                  "internalType": "string",
-                  "name": "make",
-                  "type": "string"
-                },
-                {
-                  "internalType": "string",
-                  "name": "model",
-                  "type": "string"
-                },
-                {
-                  "internalType": "string",
-                  "name": "variant",
-                  "type": "string"
-                },
-                {
-                  "internalType": "uint256",
-                  "name": "manufacturingYear",
-                  "type": "uint256"
-                },
-                {
-                  "internalType": "uint256",
-                  "name": "registrationYear",
-                  "type": "uint256"
-                },
-                {
-                  "internalType": "string",
-                  "name": "vehicleType",
-                  "type": "string"
-                },
-                {
-                  "internalType": "string",
-                  "name": "fuelType",
-                  "type": "string"
-                }
-              ],
-              "internalType": "struct VehicleRegistry.VehicleInput",
-              "name": "input",
-              "type": "tuple"
-            }
-          ],
-          "name": "registerVehicle",
-          "outputs": [],
-          "stateMutability": "nonpayable",
-          "type": "function"
+        appointmentDetails: {
+          date: scheduledDate,
+          time: selectedTimeSlot,
+          appointmentId: selectedAppointment.id
         }
-      ];
-
-      const contract = new web3.eth.Contract(abi, contractAddress);
-      
-      // Create the struct as expected by the contract
-      const vehicleInput = {
-        ownerName: vehicleData.ownerName,
-        fatherName: vehicleData.fatherName,
-        cnic: vehicleData.cnic,
-        registrationNumber: vehicleData.registrationNumber,
-        engineNumber: vehicleData.engineNumber,
-        chassisNumber: vehicleData.chassisNumber,
-        make: vehicleData.make,
-        model: vehicleData.model,
-        variant: vehicleData.variant,
-        manufacturingYear: parseInt(vehicleData.manufacturingYear) || 0,
-        registrationYear: parseInt(vehicleData.registrationYear) || 0,
-        vehicleType: vehicleData.vehicleType,
-        fuelType: vehicleData.fuelType
       };
       
-      // Send the transaction with the struct
-      const tx = await contract.methods
-        .registerVehicle(vehicleInput)
-        .send({ from: currentAccount, gas: 3000000 });
-        
-      console.log("Transaction:", tx);
-      console.log("Vehicle registered with image URL:", imageUrl);
+      // Send the data to the inspection endpoint
+      const response = await axios.post("http://localhost:5000/api/inspections", inspectionData);
       
-      alert("Vehicle registered successfully with image!");
+      console.log("Inspection request submitted:", response.data);
+      setInspectionSuccess(true);
+      
+      alert(`Vehicle submitted for inspection successfully! Your inspection ID is ${inspectionId}. Please save this ID for reference. Your appointment is confirmed for ${scheduledDate} at ${selectedTimeSlot}`);
     } catch (error) {
-      console.error("Error registering vehicle:", error);
-      alert("Error registering vehicle: " + error.message);
+      console.error("Error submitting vehicle for inspection:", error);
+      alert("Error submitting vehicle for inspection: " + error.message);
+    } finally {
+      setIsSubmitting(false);
     }
-  };
-
-  // Store metadata for NFT creation
-  const prepareNftMetadata = () => {
-    const metadata = {
-      name: `Vehicle ${vehicleData.registrationNumber}`,
-      description: `${vehicleData.make} ${vehicleData.model} ${vehicleData.variant}`,
-      image: vehicleData.imageUrl,
-      attributes: [
-        { trait_type: "Make", value: vehicleData.make },
-        { trait_type: "Model", value: vehicleData.model },
-        { trait_type: "Registration Number", value: vehicleData.registrationNumber },
-        { trait_type: "Year", value: vehicleData.manufacturingYear },
-        { trait_type: "Engine Number", value: vehicleData.engineNumber },
-        { trait_type: "Chassis Number", value: vehicleData.chassisNumber }
-      ]
-    };
-    
-    return metadata;
   };
 
   return (
     <div className="bg-gray-900 min-h-screen text-white">
       <div className="max-w-5xl mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Register Vehicle</h2>
+          <h2 className="text-2xl font-bold">Submit Vehicle for Inspection</h2>
           <div className="flex items-center">
             <button 
               onClick={connectWallet}
@@ -407,22 +218,17 @@ const VehicleRegistration = () => {
           </div>
         </div>
 
+        {inspectionId && (
+          <div className="mb-6 bg-blue-900/30 border border-blue-600 rounded-md p-3">
+            <p className="text-blue-300 font-medium">Your Inspection ID: <span className="text-white font-bold">{inspectionId}</span></p>
+            <p className="text-sm text-gray-300 mt-1">Please save this ID for future reference. You'll need it to check your inspection status.</p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Left Column - Vehicle Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold mb-2">Vehicle Information</h3>
-            
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Registration Number</label>
-              <input 
-                type="text" 
-                name="registrationNumber" 
-                value={vehicleData.registrationNumber} 
-                onChange={handleChange} 
-                className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white" 
-                required 
-              />
-            </div>
             
             <div>
               <label className="block text-sm text-gray-400 mb-1">Engine Number</label>
@@ -558,7 +364,7 @@ const VehicleRegistration = () => {
             </div>
           </div>
           
-          {/* Right Column - Owner Information & Image Upload */}
+          {/* Right Column - Owner Information & Appointment Booking */}
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-semibold mb-2">Owner Information</h3>
@@ -602,35 +408,117 @@ const VehicleRegistration = () => {
             </div>
             
             <div>
-              <h3 className="text-lg font-semibold mb-2">Vehicle Image</h3>
+              <h3 className="text-lg font-semibold mb-2">Schedule Appointment</h3>
+              
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Select Vehicle Photo</label>
-                  <input 
-                    type="file" 
-                    accept="image/*"
-                    onChange={handleImageSelect}
-                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white text-sm" 
-                  />
-                </div>
                 
-                {/* Image preview */}
-                <div className="bg-gray-800 rounded-md p-3 flex items-center justify-center border border-gray-700" style={{ height: "200px" }}>
-                  {imagePreview ? (
-                    <img 
-                      src={imagePreview} 
-                      alt="Vehicle preview" 
-                      className="max-h-full max-w-full object-contain" 
-                    />
-                  ) : (
-                    <div className="text-gray-500 text-center">
-                      <svg className="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                {appointmentError && (
+                  <div className="bg-red-900/50 border border-red-500 text-red-100 p-3 rounded-md text-sm">
+                    {appointmentError}
+                  </div>
+                )}
+                
+                {appointmentSuccess && (
+                  <div className="bg-green-900/50 border border-green-500 text-green-100 p-3 rounded-md text-sm">
+                    {appointmentSuccess}
+                  </div>
+                )}
+
+                {/* Select Appointment Date */}
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Select Date</label>
+                  <div className="relative">
+                    <select 
+                      value={scheduledDate} 
+                      onChange={(e) => setScheduledDate(e.target.value)}
+                      className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white appearance-none" 
+                      required
+                      disabled={appointmentLoading || availableDates.length === 0}
+                    >
+                      <option value="">Select a date</option>
+                      {availableDates.map((item) => (
+                      <option key={`${item.date}-${item.time}`} value={`${item.date}`}>
+                        {`${item.date}`} 
+                      </option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                      <svg className="w-4 h-4 fill-current text-gray-400" viewBox="0 0 20 20">
+                        <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
                       </svg>
-                      <p>No image selected</p>
                     </div>
-                  )}
+                  </div>
                 </div>
+
+                {scheduledDate && (
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Select Time Slot</label>
+                    <select 
+                      value={selectedTimeSlot} 
+                      onChange={(e) => setSelectedTimeSlot(e.target.value)}
+                      
+                      className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white appearance-none" 
+                      required
+                      disabled={appointmentLoading || availableDates.length === 0}
+                    >
+                      <option value="">Select a Time</option>
+                      {availableDates.map((item) => (
+                      <option key={`${item.date}-${item.time}`} value={item.time}>
+                      {`${item.time}`}
+                    </option>        
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Summary */}
+                {scheduledDate && selectedTimeSlot && (
+                  <div className="mt-4 bg-blue-900/30 border border-blue-600 rounded-md p-3">
+                    <h4 className="font-medium text-blue-300 mb-1">Your Selected Appointment</h4>
+                    <p className="text-sm text-white">
+                      <span className="text-blue-300">Date:</span> {new Date(scheduledDate).toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </p>
+                    <p className="text-sm text-white">
+                      <span className="text-blue-300">Time:</span> {selectedTimeSlot}
+                    </p>
+                  </div>
+                )}
+
+                {/*  Book Appointment Button */}
+                <button 
+                  onClick={() => {
+                    const selectedSlot = availableDates.find(
+                      (item) => item.date === scheduledDate && item.time === selectedTimeSlot
+                    );
+                    
+                    // Check if we found a slot and it has an id property
+                    if (selectedSlot) {
+                      // Use the id if available, otherwise log an error
+                      const appointmentId = selectedSlot.id || selectedSlot._id;
+                      if (appointmentId) {
+                        bookAppointment(appointmentId);
+                      } else {
+                        console.error("No appointment ID found for selected slot:", selectedSlot);
+                        setAppointmentError("Error: Could not find appointment ID. Please refresh and try again.");
+                      }
+                    } else {
+                      setAppointmentError("This time isn't available. Please select another time slot.");
+                    }
+                  }}
+                  disabled={appointmentLoading || !scheduledDate || !selectedTimeSlot || isBooked}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md disabled:opacity-50"
+                >
+                  {appointmentLoading
+                    ? "Booking..."
+                    : isBooked
+                      ? "Booked ✔️"
+                      : "Book Appointment"}
+                </button>                    
               </div>
             </div>
           </div>
@@ -638,17 +526,27 @@ const VehicleRegistration = () => {
 
         <div className="mt-8 flex justify-center">
           <button 
-            onClick={registerVehicle} 
-            disabled={isUploading}
+            onClick={submitForInspection} 
+            disabled={isSubmitting || appointmentLoading || !scheduledDate || inspectionSuccess}
             className={`${
-              isUploading 
+              isSubmitting || appointmentLoading || !scheduledDate || inspectionSuccess
                 ? 'bg-gray-600 cursor-not-allowed' 
                 : 'bg-blue-600 hover:bg-blue-700'
-            } text-white px-10 py-2 rounded-md font-medium transition duration-200 w-48`}
+            } text-white px-10 py-2 rounded-md font-medium transition duration-200 w-64`}
           >
-            {isUploading ? 'Processing...' : 'Register'}
+            {isSubmitting ? 'Processing...' : inspectionSuccess ? 'Submitted for Inspection ✔️' : 'Submit for Inspection'}
           </button>
         </div>
+        <div>
+          <div className='mb-4 text-center'>
+            <a href={'/dashboard'}
+            className='inline-block text-sm text-blue-400 hover:underline'
+            >
+            Go to Dashboard →
+            </a>
+          </div>
+        
+       </div>
       </div>
     </div>
   );
