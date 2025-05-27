@@ -138,8 +138,8 @@ const Dashboard = ({ account }) => {
           {v.status === 'Approved' && (
             <div className="mt-2">
               <a 
-                href={`/pay-fee/${v._id}`} 
-                className="inline-block text-md text-blue-300 hover:underline"
+                href={`/pay-fee/${v.inspectionId}`} 
+                className="inline-block text-md text-blue-400 hover:underline"
               >
                 Please Pay the Registeration Fee here →
               </a>

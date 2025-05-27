@@ -15,7 +15,7 @@ const Fee = () => {
   const [walletAddress, setWalletAddress] = useState('');
   const [transactionHash, setTransactionHash] = useState('');
 
-  // Fee calculation based on vehicle type
+  // Fee calculation based on vehicle type (no tax for now)
   const calculateFee = (vehicleType, engineCapacity = 0) => {
     const baseFees = {
       'Car': 5000,
@@ -27,22 +27,18 @@ const Fee = () => {
       'Default': 4000
     };
     
-    let baseFee = baseFees[vehicleType] || baseFees['Default'];
+    let regFee = baseFees[vehicleType] || baseFees['Default'];
     
     // Additional fee based on engine capacity (for cars and motorcycles)
     if (vehicleType === 'Car' && engineCapacity > 2000) {
-      baseFee += 2000;
+      regFee += 2000;
     } else if (vehicleType === 'Motorcycle' && engineCapacity > 600) {
-      baseFee += 1000;
+      regFee += 1000;
     }
     
-    const tax = Math.floor(baseFee * 0.15); // 15% tax
-    const totalFee = baseFee + tax;
-    
     return {
-      regFee: baseFee,
-      tax: tax,
-      totalFee: totalFee
+      regFee: regFee,
+      totalFee: regFee // No tax for now, so total equals reg fee
     };
   };
 
@@ -88,8 +84,14 @@ const Fee = () => {
   const fetchVehicleData = async () => {
     try {
       setLoading(true);
+      
+      // Debug: Log the inspection ID being used
+      console.log('Fetching data for inspection ID:', inspectionId);
+      
       const response = await fetch(`http://localhost:5000/api/inspections/${inspectionId}`);
       const data = await response.json();
+      
+      console.log('API Response:', data); // Debug log
       
       if (data.success) {
         const inspection = data.data;
@@ -110,14 +112,15 @@ const Fee = () => {
           }
         });
         
-        // Check if already paid (you might want to store this in the database)
+        // Check if already paid
         checkPaymentStatus(inspection.inspectionId);
       } else {
-        setError('Vehicle data not found');
+        setError(`Vehicle data not found. API Response: ${data.message}`);
+        console.error('API Error:', data);
       }
     } catch (error) {
-      setError('Failed to fetch vehicle data');
-      console.error('Error:', error);
+      setError(`Failed to fetch vehicle data: ${error.message}`);
+      console.error('Fetch Error:', error);
     } finally {
       setLoading(false);
     }
@@ -126,7 +129,7 @@ const Fee = () => {
   const checkPaymentStatus = async (inspectionId) => {
     // Check if payment is already made (implement based on your backend logic)
     try {
-      const response = await fetch(`/api/inspections/${inspectionId}/payment-status`);
+      const response = await fetch(`http://localhost:5000/api/inspections/${inspectionId}/payment-status`);
       if (response.ok) {
         const data = await response.json();
         setIsPaid(data.isPaid || false);
@@ -201,7 +204,7 @@ const Fee = () => {
 
   const updatePaymentStatus = async (txHash) => {
     try {
-      await fetch(`/api/inspections/${inspectionId}/payment`, {
+      await fetch(`http://localhost:5000/api/inspections/${inspectionId}/payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -285,18 +288,9 @@ const Fee = () => {
 
         {/* Fee Breakdown Section */}
         <div className="fee-breakdown">
-          <h3>Fee Breakdown</h3>
-          <div className="fee-item">
+          <div className="fee-item total-fee">
             <span className="fee-label">Registration Fee:</span>
             <span className="fee-value">PKR {vehicleDetails.regFee.toLocaleString()}</span>
-          </div>
-          <div className="fee-item">
-            <span className="fee-label">Tax (15%):</span>
-            <span className="fee-value">PKR {vehicleDetails.tax.toLocaleString()}</span>
-          </div>
-          <div className="fee-item total-fee">
-            <span className="fee-label">Total Amount:</span>
-            <span className="fee-value">PKR {vehicleDetails.totalFee.toLocaleString()}</span>
           </div>
         </div>
 
