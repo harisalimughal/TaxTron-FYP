@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -24,6 +24,12 @@ const Dashboard = ({ account }) => {
 
   const handleNotificationsClick = () => {
     navigate("/notifications", { state: { account } });
+  };
+  const handleFaqClick = () => {
+    navigate("/faqs", { state: { account } });
+  };
+  const handleContactsClick = () => {
+    navigate("/contact", { state: { account } });
   };
 
   useEffect(() => {
@@ -84,36 +90,24 @@ const Dashboard = ({ account }) => {
                   {notificationCount}
                 </span>
               </button>
-            </div>
-          </div>
-
-          <div>
-            <div className="text-gray-400 px-6 mb-2 uppercase text-sm font-semibold">
-              Settings
-            </div>
-
-            <div className="space-y-1">
-              <a
-                href="#"
-                className="flex items-center px-6 py-2 text-gray-400 hover:bg-gray-800"
+              <button
+                onClick={handleContactsClick}
+                className="w-full flex items-center px-6 py-2 text-gray-400 hover:bg-gray-800 text-left"
               >
-                <HelpCircle className="w-5 h-5 mr-3" />
-                FAQ's
-              </a>
-              <a
-                href="#"
-                className="flex items-center px-6 py-2 text-gray-400 hover:bg-gray-800"
+                <Bell className="w-5 h-5 mr-3" />
+                Contact
+                <span className="ml-auto text-sm text-indigo-400 bg-gray-800 px-2 py-0.5 rounded-full">
+                </span>
+              </button>
+              <button
+                onClick={handleFaqClick}
+                className="w-full flex items-center px-6 py-2 text-gray-400 hover:bg-gray-800 text-left"
               >
-                <Phone className="w-5 h-5 mr-3" />
-                Contact Us
-              </a>
-              <a
-                href="#"
-                className="flex items-center px-6 py-2 text-gray-400 hover:bg-gray-800"
-              >
-                <LogOut className="w-5 h-5 mr-3" />
-                Logout
-              </a>
+                <Bell className="w-5 h-5 mr-3" />
+                FAQs
+                <span className="ml-auto text-sm text-indigo-400 bg-gray-800 px-2 py-0.5 rounded-full">
+                </span>
+              </button>
             </div>
           </div>
         </div>
