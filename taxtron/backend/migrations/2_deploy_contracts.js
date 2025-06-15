@@ -1,5 +1,5 @@
-const VehicleRegistry = artifacts.require("VehicleRegistry");
+const VehicleNFT = artifacts.require("VehicleNFT");
 
-module.exports = function(deployer) {
-  deployer.deploy(VehicleRegistry);
+module.exports = async function (deployer) {
+  await deployer.deploy(VehicleNFT);
 };

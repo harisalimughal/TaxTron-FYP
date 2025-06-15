@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Eye, ThumbsUp, ThumbsDown, Loader, AlertCircle, Check, ChevronLeft, Upload, X } from 'lucide-react';
+import { Search, Filter, Eye, ThumbsUp, ThumbsDown, Loader, AlertCircle, Check, ChevronLeft, Upload, X, RefreshCw } from 'lucide-react';
 
 // Main Admin Dashboard Component
 export default function AdminInspect() {
@@ -224,6 +224,78 @@ function InspectionDetailView({ inspection, onBack, onStatusUpdate }) {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageUploading, setImageUploading] = useState(false);
   const [vehicleImageUrl, setVehicleImageUrl] = useState(inspection.vehicleImageUrl || '');
+  const [generatingRegNumber, setGeneratingRegNumber] = useState(false);
+  
+  // Generate a unique registration number
+  const generateRegistrationNumber = () => {
+    // Format: ABC-1234 (3 letters followed by dash and 4 digits)
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const digits = '0123456789';
+    
+    let regNumber = '';
+    
+    // Generate 3 random letters
+    for (let i = 0; i < 3; i++) {
+      regNumber += letters.charAt(Math.floor(Math.random() * letters.length));
+    }
+    
+    regNumber += '-';
+    
+    // Generate 4 random digits
+    for (let i = 0; i < 4; i++) {
+      regNumber += digits.charAt(Math.floor(Math.random() * digits.length));
+    }
+    
+    return regNumber;
+  };
+  
+  // Check if registration number exists and generate a unique one
+  const generateUniqueRegistrationNumber = async () => {
+    setGeneratingRegNumber(true);
+    setError(null);
+    
+    try {
+      let attempts = 0;
+      let isUnique = false;
+      let newRegNumber = '';
+      
+      while (!isUnique && attempts < 10) {
+        newRegNumber = generateRegistrationNumber();
+        
+        // Check if this registration number already exists
+        const response = await fetch(`http://localhost:5000/api/inspections/check-registration/${newRegNumber}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          isUnique = !data.exists; // If exists is false, then it's unique
+        } else if (response.status === 404) {
+          // Registration number doesn't exist, so it's unique
+          isUnique = true;
+        } else {
+          throw new Error('Failed to check registration number uniqueness');
+        }
+        
+        attempts++;
+      }
+      
+      if (isUnique) {
+        setRegistrationNumber(newRegNumber);
+      } else {
+        setError('Failed to generate unique registration number after multiple attempts');
+      }
+    } catch (err) {
+      setError('Error generating registration number: ' + err.message);
+    } finally {
+      setGeneratingRegNumber(false);
+    }
+  };
+  
+  // Auto-generate registration number when status changes to Approved
+  useEffect(() => {
+    if (status === 'Approved' && !registrationNumber) {
+      generateUniqueRegistrationNumber();
+    }
+  }, [status]);
   
   // Handle image selection
   const handleImageChange = (e) => {
@@ -517,13 +589,31 @@ function InspectionDetailView({ inspection, onBack, onStatusUpdate }) {
           {status === 'Approved' && (
             <div className="mb-6">
               <label className="block text-gray-700 mb-2">Registration Number</label>
-              <input
-                type="text"
-                value={registrationNumber}
-                onChange={(e) => setRegistrationNumber(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter registration number"
-              />
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={registrationNumber}
+                  onChange={(e) => setRegistrationNumber(e.target.value)}
+                  className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Auto-generated registration number"
+                  readOnly
+                />
+                <button
+                  type="button"
+                  onClick={generateUniqueRegistrationNumber}
+                  disabled={generatingRegNumber}
+                  className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400 flex items-center"
+                >
+                  {generatingRegNumber ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                Registration number is auto-generated. Click refresh to generate a new unique number.
+              </p>
             </div>
           )}
           
@@ -602,9 +692,9 @@ function InspectionDetailView({ inspection, onBack, onStatusUpdate }) {
           <div className="flex justify-end">
             <button
               onClick={handleSubmit}
-              disabled={submitting || imageUploading}
+              disabled={submitting || imageUploading || generatingRegNumber}
               className={`px-6 py-2 rounded-md text-white font-medium flex items-center 
-                ${submitting || imageUploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                ${submitting || imageUploading || generatingRegNumber ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
             >
               {submitting ? (
                 <>

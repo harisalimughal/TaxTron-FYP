@@ -1,263 +1,373 @@
+/* Fee.css - Bluish Dark Theme (Dashboard Style, Sharp & Clear) */
+
 .fee-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
+  min-height: 100vh;
+  background: #111827; /* gray-900, darker for contrast */
+  padding: 2rem;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #ffffff; /* pure white for clarity */
 }
 
 .fee-card {
-  background: white;
-  border-radius: 15px;
-  padding: 30px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  max-width: 800px;
+  margin: 0 auto;
+  background: linear-gradient(to bottom right, #1f2937, #111827); /* gray-800 to gray-900 */
+  border-radius: 8px; /* sharper corners */
+  padding: 2.5rem;
+  box-shadow: 
+    0 8px 16px rgba(0, 0, 0, 0.2); /* tighter shadow */
+  border: 1px solid #4f46e5; /* indigo-600, solid color */
 }
 
 .fee-card h2 {
   text-align: center;
-  color: #2c3e50;
-  margin-bottom: 30px;
-  font-size: 2.2em;
-  font-weight: 600;
+  margin-bottom: 2rem;
+  color: #a5b4fc; /* indigo-300 */
+  font-size: 2.2rem;
+  font-weight: 700;
 }
 
 /* Vehicle Details Section */
 .vehicle-details {
-  margin-bottom: 30px;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 10px;
-  border-left: 4px solid #3498db;
+  margin-bottom: 2rem;
+  background: #374151; /* gray-700, solid background */
+  border-radius: 6px; /* sharper corners */
+  padding: 1.8rem;
+  border: 1px solid #4f46e5; /* indigo-600 */
 }
 
 .vehicle-details h3 {
-  color: #2c3e50;
-  margin-bottom: 20px;
-  font-size: 1.4em;
+  color: #818cf8; /* indigo-400 */
+  margin-bottom: 1.5rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+  border-bottom: 2px solid #818cf8; /* indigo-400, solid line */
+  padding-bottom: 0.5rem;
 }
 
 .details-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 15px;
+  gap: 1rem;
 }
 
 .detail-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #e9ecef;
+  padding: 0.8rem;
+  background: #1f2937; /* gray-800 */
+  border-radius: 4px; /* sharper corners */
+  border: 1px solid #4f46e5; /* indigo-600 */
+  transition: all 0.15s ease; /* faster transition */
+}
+
+.detail-item:hover {
+  background: #111827; /* gray-900 */
+  border-color: #6366f1; /* indigo-500 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* tighter shadow */
 }
 
 .detail-item .label {
-  font-weight: 600;
-  color: #495057;
+  font-weight: 600; /* bolder text */
+  color: #d1d5db; /* gray-300, brighter */
+  font-size: 0.95rem;
 }
 
 .detail-item .value {
-  color: #2c3e50;
-  font-weight: 500;
+  color: #ffffff; /* pure white */
+  font-weight: 600;
+  text-align: right;
 }
 
 /* Fee Breakdown Section */
 .fee-breakdown {
-  margin-bottom: 30px;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 10px;
-  color: white;
-}
-
-.fee-breakdown h3 {
-  margin-bottom: 20px;
-  font-size: 1.4em;
+  background: linear-gradient(to bottom right, #374151, #1f2937); /* gray-700 to gray-800 */
+  border-radius: 6px;
+  padding: 1.8rem;
+  margin-bottom: 2rem;
+  border: 1px solid #4f46e5; /* indigo-600 */
 }
 
 .fee-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #6b7280; /* gray-500, solid line */
 }
 
 .fee-item:last-child {
   border-bottom: none;
 }
 
-.total-fee {
-  font-size: 1.2em;
+.fee-item.total-fee {
+  border-top: 2px solid #818cf8; /* indigo-400 */
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  margin-top: 10px;
-  padding-top: 15px;
-  border-top: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .fee-label {
-  font-weight: 500;
+  color: #ffffff; /* pure white */
+  font-weight: 600;
 }
 
 .fee-value {
-  font-weight: 600;
-  font-size: 1.1em;
+  color: #3b82f6; /* blue-500, brighter */
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.total-fee .fee-value {
+  color: #2563eb; /* blue-600 */
+  font-size: 1.3rem;
+}
+
+/* Network Info */
+.network-info {
+  background: #fef3c7; /* amber-100, solid */
+  border: 1px solid #f59e0b; /* amber-500 */
+  border-radius: 6px;
+  padding: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.network-info p {
+  margin: 0.3rem 0;
+  color: #d97706; /* amber-600 */
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 /* Wallet Section */
 .wallet-section {
-  margin-bottom: 20px;
   text-align: center;
+  margin-bottom: 2rem;
 }
 
 .connect-wallet-btn {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
+  background: #2563eb; /* blue-600 */
+  color: #ffffff;
   border: none;
-  padding: 15px 30px;
-  border-radius: 25px;
-  font-size: 1.1em;
+  padding: 1rem 2rem;
+  border-radius: 4px;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+  transition: all 0.15s ease;
 }
 
 .connect-wallet-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(240, 147, 251, 0.4);
+  background: #1d4ed8; /* blue-700 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .wallet-info {
+  background: #dcfce7; /* green-100 */
+  border: 1px solid #16a34a; /* green-600 */
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
   text-align: center;
-  margin-bottom: 20px;
-  padding: 10px;
-  background: #e8f5e8;
-  border-radius: 8px;
-  color: #2d5a2d;
-  font-weight: 500;
+}
+
+.wallet-info p {
+  margin: 0;
+  color: #16a34a; /* green-600 */
+  font-weight: 600;
 }
 
 /* Payment Section */
 .payment-section {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 2rem;
 }
 
 .pay-btn {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  color: white;
+  background: #2563eb; /* blue-600 */
+  color: #ffffff;
   border: none;
-  padding: 18px 40px;
-  border-radius: 30px;
-  font-size: 1.2em;
-  font-weight: 700;
+  padding: 1.2rem 2.5rem;
+  border-radius: 4px;
+  font-size: 1.2rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 5px 20px rgba(79, 172, 254, 0.3);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  transition: all 0.15s ease;
+  margin-bottom: 1rem;
+  min-width: 280px;
 }
 
 .pay-btn:hover:not(:disabled) {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+  background: #1d4ed8; /* blue-700 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .pay-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.7; /* less faded */
   cursor: not-allowed;
-  transform: none;
+}
+
+.payment-note {
+  color: #d1d5db; /* gray-300 */
+  font-size: 0.95rem;
+  margin: 0;
 }
 
 /* Payment Success */
 .payment-success {
+  background: linear-gradient(to bottom right, #374151, #1f2937); /* gray-700 to gray-800 */
+  border: 2px solid #16a34a; /* green-600 */
+  border-radius: 6px;
+  padding: 2rem;
   text-align: center;
-  padding: 25px;
-  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-  border-radius: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 2rem;
 }
 
 .success-icon {
-  font-size: 3em;
-  margin-bottom: 10px;
+  font-size: 3rem;
+  margin-bottom: 1rem;
 }
 
 .payment-success h3 {
-  color: #2d5a2d;
-  margin-bottom: 10px;
-  font-size: 1.5em;
+  color: #16a34a; /* green-600 */
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
 }
 
 .payment-success p {
-  color: #2d5a2d;
-  margin-bottom: 5px;
+  color: #ffffff; /* pure white */
+  margin-bottom: 1.5rem;
+}
+
+.transaction-info {
+  background: #1f2937; /* gray-800 */
+  border-radius: 4px;
+  padding: 1.2rem;
+  margin: 1.5rem 0;
+  border: 1px solid #4f46e5; /* indigo-600 */
 }
 
 .tx-hash {
-  font-family: monospace;
-  font-size: 0.9em;
-  background: rgba(255, 255, 255, 0.5);
-  padding: 8px;
-  border-radius: 5px;
-  word-break: break-all;
+  color: #3b82f6; /* blue-500 */
+  font-family: 'Courier New', monospace;
+  font-size: 0.95rem;
+  margin-bottom: 0.8rem;
+}
+
+.view-tx-btn {
+  background: #2563eb; /* blue-600 */
+  color: #ffffff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.view-tx-btn:hover {
+  background: #1d4ed8; /* blue-700 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.next-steps {
+  text-align: left;
+  margin-top: 1.5rem;
+}
+
+.next-steps p {
+  color: #818cf8; /* indigo-400 */
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+}
+
+.next-steps ul {
+  color: #ffffff; /* pure white */
+  padding-left: 1.5rem;
+}
+
+.next-steps li {
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
 }
 
 /* NFT Section */
 .nft-section {
   text-align: center;
+  margin-bottom: 2rem;
 }
 
 .nft-btn {
-  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-  color: #8b4513;
+  background: #4f46e5; /* indigo-600 */
+  color: #ffffff;
   border: none;
-  padding: 15px 35px;
-  border-radius: 25px;
-  font-size: 1.1em;
+  padding: 1.2rem 2.5rem;
+  border-radius: 4px;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(252, 182, 159, 0.3);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  transition: all 0.15s ease;
 }
 
 .nft-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(252, 182, 159, 0.4);
+  background: #4338ca; /* indigo-700 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Error and Loading States */
-.error, .error-message {
-  color: #e74c3c;
-  text-align: center;
-  padding: 15px;
-  background: #fdf2f2;
-  border: 1px solid #f5c6cb;
-  border-radius: 8px;
-  margin: 10px 0;
-}
-
 .loading {
   text-align: center;
-  padding: 50px;
-  font-size: 1.2em;
-  color: #6c757d;
+  font-size: 1.2rem;
+  color: #3b82f6; /* blue-500 */
+  padding: 3rem;
+}
+
+.error {
+  color: #dc2626; /* red-600 */
+  text-align: center;
+  padding: 2rem;
+  background: #fee2e2; /* red-100 */
+  border: 1px solid #dc2626; /* red-600 */
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.error-message {
+  background: #fee2e2; /* red-100 */
+  border: 1px solid #dc2626; /* red-600 */
+  color: #dc2626; /* red-600 */
+  padding: 1rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.retry-btn {
+  background: #dc2626; /* red-600 */
+  color: #ffffff;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+。刘btn:hover {
+  background: #b91c1c; /* red-700 */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .fee-container {
-    padding: 15px;
+    padding: 1rem;
   }
   
   .fee-card {
-    padding: 20px;
-  }
-  
-  .fee-card h2 {
-    font-size: 1.8em;
+    padding: 1.5rem;
   }
   
   .details-grid {
@@ -266,29 +376,36 @@
   
   .detail-item {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
+    text-align: center;
+    gap: 0.5rem;
   }
   
-  .fee-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
+  .detail-item .value {
+    text-align: center;
   }
   
-  .pay-btn, .nft-btn, .connect-wallet-btn {
+  .fee-card h2 {
+    font-size: 1.8rem;
+  }
+  
+  .pay-btn, .nft-btn {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    min-width: auto;
     width: 100%;
-    padding: 15px;
   }
 }
 
-/* Animation for loading states */
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
-}
-
-.pay-btn:disabled {
-  animation: pulse 1.5s infinite;
+@media (max-width: 480px) {
+  .fee-card {
+    padding: 1rem;
+  }
+  
+  .fee-card h2 {
+    font-size: 1.5rem;
+  }
+  
+  .vehicle-details, .fee-breakdown {
+    padding: 1.2rem;
+  }
 }

@@ -10,6 +10,7 @@
     "copy-abi": "cp ../backend/build/contracts/VehicleRegistry.json ./src/contractABI.json"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "axios": "^1.8.4",
     "lucide-react": "^0.510.0",
     "react": "^19.0.0",

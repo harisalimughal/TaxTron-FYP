@@ -1,205 +1,220 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
 import axios from "axios";
-
+import {
+  Home,
+  Bell,
+  HelpCircle,
+  Phone,
+  LogOut,
+  Car,
+  Repeat,
+  CreditCard,
+  History,
+  ArrowLeft,
+} from "lucide-react";
 
 const Dashboard = ({ account }) => {
   const navigate = useNavigate();
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const handleServiceSelection = (path) => {
     navigate(path, { state: { account } });
   };
-  const [inspectionData, setInspectionData] = useState([]);
+
+  const handleNotificationsClick = () => {
+    navigate("/notifications", { state: { account } });
+  };
 
   useEffect(() => {
-    const fetchInspectionStatus = async () => {
+    const fetchNotificationCount = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/inspections/wallet/${account}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` }
-        });
-
-        console.log(res);
-  
-        // Ensure the response is an array
+        const res = await axios.get(
+          `http://localhost:5000/api/inspections/wallet/${account}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+            },
+          }
+        );
         if (Array.isArray(res.data.data)) {
-          setInspectionData(res.data.data);
-        } else {
-          console.error("Unexpected inspection data:", res.data);
-          setInspectionData([]); // fallback to empty array
+          setNotificationCount(res.data.data.length);
         }
       } catch (err) {
-        console.error("Failed to fetch inspection data:", err);
-        setInspectionData([]); // fallback to empty array in case of error
+        console.error("Failed to fetch notification count:", err);
+        setNotificationCount(0);
       }
     };
-  
-    fetchInspectionStatus();
-  }, []);
-  
 
+    if (account) {
+      fetchNotificationCount();
+    }
+  }, [account]);
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
       {/* Sidebar */}
-      <div className="w-64 bg-gray-900 border-r border-gray-800">
-        <div className="p-4">
+      <div className="w-64 bg-gray-900 border-r border-gray-800 flex flex-col">
+        <div className="p-6 border-b border-gray-800">
           <h1 className="text-2xl font-bold text-indigo-400">TaxTron</h1>
-          
-    
+          <p className="text-gray-500 text-sm">Vehicle Services Portal</p>
         </div>
-        
-        <div className="mt-6">
-          <div className="text-indigo-500 px-4 py-2">Menu</div>
-          
-          <div className="mt-2">
-            <a href="#" className="flex items-center px-4 py-2 text-indigo-400 hover:bg-gray-800">
-              <span className="mr-2">◻</span>
-              <span>Home</span>
-            </a>
-            <a href="#" className="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-800">
-              <span className="mr-2">◯</span>
-              <span>Notifications (2)</span>
-            </a>
+
+        <div className="flex-1 overflow-y-auto py-6 space-y-6">
+          <div>
+            <div className="text-indigo-500 px-6 mb-2 uppercase text-sm font-semibold">
+              Menu
+            </div>
+
+            <div className="space-y-1">
+              <a
+                href="#"
+                className="flex items-center px-6 py-2 text-indigo-400 hover:bg-gray-800"
+              >
+                <Home className="w-5 h-5 mr-3" />
+                Home
+              </a>
+              <button
+                onClick={handleNotificationsClick}
+                className="w-full flex items-center px-6 py-2 text-gray-400 hover:bg-gray-800 text-left"
+              >
+                <Bell className="w-5 h-5 mr-3" />
+                Inspections
+                <span className="ml-auto text-sm text-indigo-400 bg-gray-800 px-2 py-0.5 rounded-full">
+                  {notificationCount}
+                </span>
+              </button>
+            </div>
           </div>
-          
-          <div className="mt-6">
-            <div className="text-gray-400 px-4 py-2">Settings</div>
-            
-            <div className="mt-2">
-              <a href="#" className="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-800">
-                <span className="mr-2">◻</span>
-                <span>FAQ's</span>
+
+          <div>
+            <div className="text-gray-400 px-6 mb-2 uppercase text-sm font-semibold">
+              Settings
+            </div>
+
+            <div className="space-y-1">
+              <a
+                href="#"
+                className="flex items-center px-6 py-2 text-gray-400 hover:bg-gray-800"
+              >
+                <HelpCircle className="w-5 h-5 mr-3" />
+                FAQ's
               </a>
-              <a href="#" className="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-800">
-                <span className="mr-2">◻</span>
-                <span>Contact us</span>
+              <a
+                href="#"
+                className="flex items-center px-6 py-2 text-gray-400 hover:bg-gray-800"
+              >
+                <Phone className="w-5 h-5 mr-3" />
+                Contact Us
               </a>
-              <a href="#" className="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-800">
-                <span className="mr-2">◻</span>
-                <span>Logout</span>
+              <a
+                href="#"
+                className="flex items-center px-6 py-2 text-gray-400 hover:bg-gray-800"
+              >
+                <LogOut className="w-5 h-5 mr-3" />
+                Logout
               </a>
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Main Content */}
-      <div className="flex-1 p-8 ">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-gray-400">Welcome to Dashboard</h2>
+      <div className="flex-1 p-10 overflow-y-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-gray-400 text-lg">Welcome to Dashboard</h2>
           <div className="flex items-center">
-            <button 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition duration-200"
-            >
-              {account ? `Connected Account: ${account.substring(0, 6)}...${account.substring(38)}` : "Connect Wallet"}
+            <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-md">
+              {account
+                ? `Connected: ${account.substring(0, 6)}...${account.substring(38)}`
+                : "Connect Wallet"}
             </button>
             <button
-              className="ml-4 text-blue-400 hover:text-blue-300 transition duration-200"
+              className="ml-4 text-indigo-400 hover:text-indigo-300"
               onClick={() => window.history.back()}
             >
-              &lt; Back
+              <ArrowLeft className="inline w-5 h-5 mr-1" />
+              Back
             </button>
           </div>
-          
         </div>
-        <div><h2 className="text-xl font-semibold mb-8 text-center">Pick a service to continue</h2> </div>
-        <div className="bg-gray-800 p-4 rounded-md border border-indigo-500/30 mb-6">
-  <h3 className="text-lg mb-2 text-indigo-400 font-semibold">Vehicle Inspection Status</h3>
-  {inspectionData.length === 0 ? (
-    <p className="text-gray-400">No inspection records found.</p>
-  ) : (
-    <ul className="space-y-4">
-      {inspectionData.map((v, idx) => (
-        <li key={idx} className="p-3 border border-gray-700 rounded-md">
-          <div className="flex justify-between items-center mb-1">
-            <span className="font-medium text-white">Vehicle Owner: {v.vehicleDetails?.ownerName || "N/A"}</span>
-            <span className={`font-medium ${
-              v.status === 'Approved' || v.status === 'Accepted' ? 'text-green-500' :
-              v.status === 'Rejected' ? 'text-red-500' :
-              v.status === 'Pending' ? 'text-yellow-400' :
-              'text-gray-400' }`}>
-              {v.status}
-              {v.status === 'Accepted' && (
-                <a
-                  href="/Pay Fee"
-                  className="ml-4 text-sm underline text-blue-400 hover:text-blue-300"
-                >
-                  View NFT
-                </a>
-              )}
-            </span>
 
-          </div>
+        <div className="text-center mb-14">
+          <h2 className="text-3xl font-semibold text-white mb-2">
+            Pick a service to continue
+          </h2>
+          <p className="text-gray-400">Select one of the services below</p>
+        </div>
 
-          <p className="text-sm text-gray-400">Inspection ID: {v.inspectionId}</p>
-          <p className="text-sm text-gray-400">Appointment: {v.appointmentDetails?.date} at {v.appointmentDetails?.time}</p>
-
-          {v.status === 'Approved' && (
-            <div className="mt-2">
-              <a 
-                href={`/pay-fee/${v.inspectionId}`} 
-                className="inline-block text-md text-blue-400 hover:underline"
-              >
-                Please Pay the Registeration Fee here →
-              </a>
-            </div>
-          )}
-        </li>
-      ))}
-    </ul>
-  )}
-</div>
-
-
-
-        
-        <div className=" ml-16">
-
-        <div className="grid grid-cols-2 gap-6 max-w-3xl">
-          {/* Vehicle Registration Card */}
-          <div 
-            className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-6 border border-indigo-500/30 cursor-pointer hover:shadow-lg hover:shadow-indigo-500/20 transition-all"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+          {/* Service Card */}
+          <div
             onClick={() => handleServiceSelection("/register")}
+            className="cursor-pointer bg-gray-800 border border-indigo-500/30 rounded-2xl p-8 hover:border-indigo-500 hover:shadow-lg hover:shadow-indigo-500/20 transition-all"
           >
-            <div className="h-16 w-16 bg-indigo-500/10 rounded-lg flex items-center justify-center mb-4">
-              <svg className="h-8 w-8 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17l3-2.94m0 0l3 2.94M12 14.06V3.5M16 20H8a2 2 0 01-2-2V8a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2z" />
-              </svg>
+            <div className="flex items-center space-x-4 mb-5">
+              <div className="bg-indigo-500/10 p-4 rounded-xl">
+                <Car className="w-7 h-7 text-indigo-400" />
+              </div>
+              <h3 className="text-2xl font-semibold text-white">
+                Vehicle Registration
+              </h3>
             </div>
-            <h3 className="text-lg font-medium">Vehicle Registration</h3>
+            <p className="text-gray-400 text-md">
+              Register your vehicle with blockchain-backed security.
+            </p>
           </div>
-          
-          {/* Ownership Transfer Card */}
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-6 border border-indigo-500/30 cursor-pointer hover:shadow-lg hover:shadow-indigo-500/20 transition-all">
-            <div className="h-16 w-16 bg-indigo-500/10 rounded-lg flex items-center justify-center mb-4">
-              <svg className="h-8 w-8 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
+
+          <div
+            onClick={() => handleServiceSelection("/transfer")}
+            className="cursor-pointer bg-gray-800 border border-indigo-500/30 rounded-2xl p-8 hover:border-indigo-500 hover:shadow-lg hover:shadow-indigo-500/20 transition-all"
+          >
+            <div className="flex items-center space-x-4 mb-5">
+              <div className="bg-indigo-500/10 p-4 rounded-xl">
+                <Repeat className="w-7 h-7 text-indigo-400" />
+              </div>
+              <h3 className="text-2xl font-semibold text-white">
+                Ownership Transfer
+              </h3>
             </div>
-            <h3 className="text-lg font-medium">Ownership Transfer</h3>
+            <p className="text-gray-400 text-md">
+              Transfer vehicle ownership securely and easily.
+            </p>
           </div>
-          
-          {/* Tax Payment Card */}
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-6 border border-indigo-500/30 cursor-pointer hover:shadow-lg hover:shadow-indigo-500/20 transition-all">
-            <div className="h-16 w-16 bg-indigo-500/10 rounded-lg flex items-center justify-center mb-4">
-              <svg className="h-8 w-8 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+
+          <div
+            onClick={() => handleServiceSelection("/tax-payment")}
+            className="cursor-pointer bg-gray-800 border border-indigo-500/30 rounded-2xl p-8 hover:border-indigo-500 hover:shadow-lg hover:shadow-indigo-500/20 transition-all"
+          >
+            <div className="flex items-center space-x-4 mb-5">
+              <div className="bg-indigo-500/10 p-4 rounded-xl">
+                <CreditCard className="w-7 h-7 text-indigo-400" />
+              </div>
+              <h3 className="text-2xl font-semibold text-white">
+                Tax Payment
+              </h3>
             </div>
-            <h3 className="text-lg font-medium">Tax Payment</h3>
+            <p className="text-gray-400 text-md">
+              Pay taxes and stay compliant with one click.
+            </p>
           </div>
-          
-          {/* Ownership History Card */}
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-6 border border-indigo-500/30 cursor-pointer hover:shadow-lg hover:shadow-indigo-500/20 transition-all">
-            <div className="h-16 w-16 bg-indigo-500/10 rounded-lg flex items-center justify-center mb-4">
-              <svg className="h-8 w-8 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+
+          <div
+            onClick={() => handleServiceSelection("/history")}
+            className="cursor-pointer bg-gray-800 border border-indigo-500/30 rounded-2xl p-8 hover:border-indigo-500 hover:shadow-lg hover:shadow-indigo-500/20 transition-all"
+          >
+            <div className="flex items-center space-x-4 mb-5">
+              <div className="bg-indigo-500/10 p-4 rounded-xl">
+                <History className="w-7 h-7 text-indigo-400" />
+              </div>
+              <h3 className="text-2xl font-semibold text-white">
+                Ownership History
+              </h3>
             </div>
-            <h3 className="text-lg font-medium">Ownership History</h3>
+            <p className="text-gray-400 text-md">
+              Check complete history of your registered vehicle.
+            </p>
           </div>
-        </div>
         </div>
       </div>
     </div>
