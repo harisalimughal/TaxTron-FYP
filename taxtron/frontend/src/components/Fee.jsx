@@ -487,7 +487,7 @@ const Fee = () => {
               <ul>
                 <li>Tax payment can be made separately when required</li>
                 <li>Your vehicle is now officially registered</li>
-                <li>Generate your Vehicle NFT certificate</li>
+                <li>See your Vehicle NFT certificate</li>
               </ul>
             </div>
           </div>
@@ -497,7 +497,7 @@ const Fee = () => {
         {isPaid && (
           <div className="nft-section">
             <button onClick={goToNFT} className="nft-btn">
-              Generate Vehicle NFT Certificate
+              Vehicle NFT Certificate
             </button>
           </div>
         )}

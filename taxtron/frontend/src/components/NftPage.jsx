@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import Web3 from 'web3';
 import vehicleRegistryABI from '../contracts/contractABI.json';
 import vehicleNftABI from '../contracts/VehicleNFT.json';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const NFTPage = () => {
   const { inspectionId } = useParams();
+  const NFTPageRef = useRef(null);
+  const certificateRef = useRef(null); // Added specific ref for certificate
   
   const [vehicleData, setVehicleData] = useState(null);
   const [blockchainData, setBlockchainData] = useState(null);
@@ -19,6 +23,7 @@ const NFTPage = () => {
   const [isPaid, setIsPaid] = useState(false);
   const [transactionHash, setTransactionHash] = useState('');
   const [showCertificate, setShowCertificate] = useState(false);
+  const [isDownloadingPDF, setIsDownloadingPDF] = useState(false); // Added state for PDF download
 
   // Contract configurations
   const VEHICLE_REGISTRY_ADDRESS = "0x4E918C44F498184F3F0Cc6E3ECB88123dceD8500";
@@ -401,55 +406,28 @@ Registration: ${nftData.vehicleInfo?.registrationNumber}`;
     }
   };
 
-  const printCertificate = () => {
-    const printWindow = window.open('', '_blank');
-    const certificateHTML = document.getElementById('certificate-card').innerHTML;
-    
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Vehicle Registration Certificate</title>
-          <style>
-            body { 
-              margin: 20px; 
-              font-family: Arial, sans-serif; 
-              background: #f5f5f5;
-            }
-            .certificate-card {
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              border-radius: 16px;
-              padding: 24px;
-              color: white;
-              box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-              max-width: 400px;
-              margin: 0 auto;
-            }
-            .header { text-align: center; margin-bottom: 20px; }
-            .logo { font-size: 24px; margin-bottom: 8px; }
-            .title { font-size: 18px; font-weight: bold; margin: 0; }
-            .subtitle { font-size: 12px; opacity: 0.9; margin: 4px 0; }
-            .vehicle-info { margin: 20px 0; }
-            .info-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 14px; }
-            .label { opacity: 0.8; }
-            .value { font-weight: bold; }
-            .photo-section { text-align: center; margin: 16px 0; }
-            .footer { text-align: center; margin-top: 20px; font-size: 10px; opacity: 0.7; }
-            @media print {
-              body { margin: 0; background: white; }
-              .certificate-card { box-shadow: none; }
-            }
-          </style>
-        </head>
-        <body>
-          ${certificateHTML}
-        </body>
-      </html>
-    `);
-    
-    printWindow.document.close();
-    printWindow.print();
-  };
+
+
+
+const downloadCertificateAsPDF = async () => {
+  const element = certificateRef.current;
+  
+  const canvas = await html2canvas(element, {
+    useCORS: true,
+    allowTaint: true,
+    scale: 0.75, // Reduce this for smaller canvas
+  });
+
+  const imgData = canvas.toDataURL('image/png');
+  const pdf = new jsPDF('p', 'mm', 'a4');
+
+  const imgWidth = 100; // Adjust this based on your layout
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+  pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+  pdf.save(`vehicle-certificate-${inspectionId}.pdf`);
+};
+
 
   // Loading and error states
   if (!inspectionId) {
@@ -508,7 +486,7 @@ Registration: ${nftData.vehicleInfo?.registrationNumber}`;
   const { vehicleDetails } = vehicleData;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-6 px-4">
+    <div ref={NFTPageRef} className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-6 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Status display showing both payment and NFT status */}
         <div className="mb-4 flex gap-2 justify-center">
@@ -622,7 +600,7 @@ Registration: ${nftData.vehicleInfo?.registrationNumber}`;
                       Generating NFT...
                     </>
                   ) : (
-                    <>🎨 Generate NFT Certificate</>
+                    <>🎨 View NFT Certificate</>
                   )}
                 </button>
               )}
@@ -639,26 +617,37 @@ Registration: ${nftData.vehicleInfo?.registrationNumber}`;
           {/* Certificate Display Panel */}
           <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-6 shadow-2xl border border-slate-600">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">Certificate</h2>
+              <h2 className="text-2xl font-bold text-white">NFT Digital Certificate</h2>
               {nftGenerated && (
                 <div className="flex gap-2">
                   <button
                     onClick={copyNFTDetails}
                     className="bg-slate-600 hover:bg-slate-700 text-white px-3 py-1 rounded text-sm transition-all"
+                    title="Copy NFT Details"
                   >
                     📋
                   </button>
                   <button
                     onClick={viewOnExplorer}
                     className="bg-slate-600 hover:bg-slate-700 text-white px-3 py-1 rounded text-sm transition-all"
+                    title="View on Explorer"
                   >
                     🔍
                   </button>
                   <button
-                    onClick={printCertificate}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-sm transition-all"
+                    onClick={downloadCertificateAsPDF}
+                    disabled={isDownloadingPDF}
+                    className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-1 rounded text-sm transition-all flex items-center"
+                    title="Download PDF"
                   >
-                    🖨️
+                    {isDownloadingPDF ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b border-white mr-1"></div>
+                        ⏳
+                      </>
+                    ) : (
+                      '🖨️'
+                    )}
                   </button>
                 </div>
               )}
@@ -666,7 +655,11 @@ Registration: ${nftData.vehicleInfo?.registrationNumber}`;
 
             {nftGenerated && showCertificate ? (
               /* License Card Style Certificate */
-              <div id="certificate-card" className="certificate-card bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 rounded-2xl p-6 text-white shadow-2xl border border-blue-400/30 max-w-sm mx-auto">
+              <div 
+                ref={certificateRef}
+                id="certificate-card" 
+                className="certificate-card bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 rounded-2xl p-6 text-white shadow-2xl border border-blue-400/30 max-w-sm mx-auto"
+              >
                 {/* Header */}
                 <div className="text-center mb-6">
                   <h3 className="text-lg font-bold">VEHICLE REGISTRATION</h3>
@@ -685,75 +678,88 @@ Registration: ${nftData.vehicleInfo?.registrationNumber}`;
                   </div>
                 )}
 
-                {/* Vehicle Information */}
+                {/* Vehicle Information - Continuing from where it was cut off */}
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between items-center">
-                    <span className="opacity-80">Vehicle:</span>
-                    <span className="font-bold text-right">
-                      {vehicleDetails?.make} {vehicleDetails?.model}
-                    </span>
+                    <span className="opacity-90">Vehicle:</span>
+                    <span className="font-semibold">{vehicleDetails?.make} {vehicleDetails?.model}</span>
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <span className="opacity-80">Year:</span>
-                    <span className="font-bold">{vehicleDetails?.manufacturingYear}</span>
+                    <span className="opacity-90">Year:</span>
+                    <span className="font-semibold">{vehicleDetails?.manufacturingYear}</span>
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <span className="opacity-80">Type:</span>
-                    <span className="font-bold">{vehicleDetails?.vehicleType}</span>
+                    <span className="opacity-90">Type:</span>
+                    <span className="font-semibold">{vehicleDetails?.vehicleType}</span>
                   </div>
-
+                  
                   <div className="flex justify-between items-center">
-                    <span className="opacity-80">Registration:</span>
-                    <span className="font-bold">{vehicleData.registrationNumber || blockchainData?.registrationNumber || 'Pending'}</span>
+                    <span className="opacity-90">Owner:</span>
+                    <span className="font-semibold text-xs">{vehicleDetails?.ownerName}</span>
                   </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="opacity-80">Owner:</span>
-                    <span className="font-bold text-right">{vehicleDetails?.ownerName || 'Unknown'}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="opacity-80">Inspection ID:</span>
-                    <span className="font-bold">{inspectionId}</span>
-                  </div>
-
-                  {nftData?.tokenId && (
-                    <div className="flex justify-between items-center">
-                      <span className="opacity-80">Token ID:</span>
-                      <span className="font-bold">{nftData.tokenId}</span>
+                  
+                  {(vehicleData.registrationNumber || blockchainData?.registrationNumber) && (
+                    <div className="bg-white/20 p-3 rounded-lg mt-4">
+                      <div className="text-center">
+                        <p className="text-xs opacity-90">Registration Number</p>
+                        <p className="font-bold text-lg tracking-wider">
+                          {vehicleData.registrationNumber || blockchainData?.registrationNumber}
+                        </p>
+                      </div>
                     </div>
                   )}
-
-                  {nftData?.mintTimestamp && (
-                    <div className="flex justify-between items-center">
-                      <span className="opacity-80">Minted:</span>
-                      <span className="font-bold">
-                        {new Date(Number(nftData.mintTimestamp) * 1000).toLocaleDateString()}
-                      </span>
+                  
+                  {/* NFT Details */}
+                  {nftData?.exists && (
+                    <div className="border-t border-white/30 pt-3 mt-4">
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-90">Token ID:</span>
+                        <span className="font-mono text-xs">{nftData.tokenId}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-90">Owner:</span>
+                        <span className="font-mono text-xs">{nftData.owner?.slice(0, 6)}...{nftData.owner?.slice(-4)}</span>
+                      </div>
                     </div>
                   )}
                 </div>
 
                 {/* Footer */}
-                <div className="text-center mt-6">
-                  <div className="w-16 h-0.5 bg-white/50 mx-auto mb-2"></div>
-                  <p className="text-xs opacity-70">Verified on Blockchain</p>
-                  <p className="text-xs font-mono mt-1">
-                    Contract: {VEHICLE_NFT_ADDRESS.slice(0, 6)}...{VEHICLE_NFT_ADDRESS.slice(-4)}
-                  </p>
+                <div className="text-center mt-6 pt-4 border-t border-white/30">
+                  <p className="text-xs opacity-75">Blockchain Verified</p>
+                  <p className="text-xs opacity-75">Inspection ID: {inspectionId}</p>
+                  <div className="flex justify-center items-center mt-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                    <span className="text-xs">Authentic Certificate</span>
+                  </div>
                 </div>
               </div>
             ) : (
+              /* Placeholder when NFT not generated */
               <div className="text-center py-12">
-                <div className="text-4xl mb-4 text-slate-400">🎨</div>
-                <p className="text-white mb-2">No NFT Certificate Available</p>
-                <p className="text-slate-400 text-sm">
-                  {isPaid
-                    ? 'Click "Generate NFT Certificate" to create one'
-                    : 'Complete registration payment to enable NFT generation'}
+                <div className="text-6xl mb-4">🏆</div>
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  NFT Certificate Ready
+                </h3>
+                <p className="text-slate-400 mb-6">
+                  {!walletAddress 
+                    ? "Connect your wallet to generate your NFT certificate"
+                    : !isPaid 
+                    ? "Complete payment to unlock NFT generation"
+                    : "Click 'View NFT Certificate' to generate your digital certificate"
+                  }
                 </p>
+                
+                {nftGenerated && !showCertificate && (
+                  <button
+                    onClick={() => setShowCertificate(true)}
+                    className="bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-700 hover:to-purple-700 text-white py-2 px-6 rounded-lg font-semibold transition-all duration-200"
+                  >
+                    View Certificate
+                  </button>
+                )}
               </div>
             )}
           </div>
