@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react';
-import { Search, Filter, Eye, ThumbsUp, ThumbsDown, Loader, AlertCircle, Check, ChevronLeft, Upload, X, RefreshCw } from 'lucide-react';
+import { Search, Filter, Eye, ThumbsUp, ThumbsDown, Loader, AlertCircle, Check, ChevronLeft, Upload, X, RefreshCw, User, Car, FileText, Calendar, MapPin, Phone, Mail } from 'lucide-react';
 
 // Main Admin Dashboard Component
 export default function AdminInspect() {
@@ -50,6 +51,10 @@ export default function AdminInspect() {
   const filteredInspections = inspections.filter(inspection => 
     inspection.inspectionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
     inspection.walletAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (inspection.ownerDetails && inspection.ownerDetails.name && 
+     inspection.ownerDetails.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (inspection.ownerDetails && inspection.ownerDetails.cnic && 
+     inspection.ownerDetails.cnic.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (inspection.vehicleDetails && inspection.vehicleDetails.make && 
      inspection.vehicleDetails.make.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (inspection.vehicleDetails && inspection.vehicleDetails.model && 
@@ -103,7 +108,7 @@ export default function AdminInspect() {
                 </div>
                 <input
                   type="text"
-                  placeholder="Search inspections..."
+                  placeholder="Search by ID, wallet, owner name, CNIC, or vehicle..."
                   className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -135,6 +140,7 @@ export default function AdminInspect() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Wallet Address</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
@@ -148,6 +154,9 @@ export default function AdminInspect() {
                       <tr key={inspection.inspectionId} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {inspection.inspectionId.substring(0, 8)}...
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {inspection.ownerDetails?.name || 'N/A'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {inspection.vehicleDetails ? `${inspection.vehicleDetails.make} ${inspection.vehicleDetails.model}` : 'N/A'}
@@ -174,7 +183,7 @@ export default function AdminInspect() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+                      <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">
                         No inspections found
                       </td>
                     </tr>
@@ -415,87 +424,118 @@ function InspectionDetailView({ inspection, onBack, onStatusUpdate }) {
         
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Inspection Details</h1>
         
-        {/* Inspection Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-gray-50 p-4 rounded-md">
-            <h2 className="text-lg font-semibold mb-3">Basic Information</h2>
-            <div className="space-y-2">
+        {/* Comprehensive Information Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          
+          {/* Basic Information */}
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
+            <div className="flex items-center mb-4">
+              <FileText className="w-6 h-6 text-blue-600 mr-2" />
+              <h2 className="text-lg font-semibold text-blue-800">Inspection Information</h2>
+            </div>
+            <div className="space-y-3">
               <div>
-                <span className="text-gray-500 text-sm">Inspection ID:</span>
-                <p className="font-medium">{inspection.inspectionId}</p>
+                <span className="text-blue-600 text-sm font-medium">Inspection ID:</span>
+                <p className="font-medium text-gray-800 break-all">{inspection.inspectionId}</p>
               </div>
               <div>
-                <span className="text-gray-500 text-sm">Status:</span>
+                <span className="text-blue-600 text-sm font-medium">Current Status:</span>
                 <div className="mt-1">
                   <StatusBadge status={inspection.status} />
                 </div>
               </div>
               <div>
-                <span className="text-gray-500 text-sm">Wallet Address:</span>
-                <p className="font-medium">{inspection.walletAddress}</p>
+                <span className="text-blue-600 text-sm font-medium">Wallet Address:</span>
+                <p className="font-medium text-gray-800 break-all text-sm">{inspection.walletAddress}</p>
               </div>
               <div>
-                <span className="text-gray-500 text-sm">Created:</span>
-                <p className="font-medium">{new Date(inspection.createdAt).toLocaleString()}</p>
+                <span className="text-blue-600 text-sm font-medium">Submission Date:</span>
+                <p className="font-medium text-gray-800">{new Date(inspection.createdAt).toLocaleString()}</p>
               </div>
               {inspection.inspectionDate && (
                 <div>
-                  <span className="text-gray-500 text-sm">Inspection Date:</span>
-                  <p className="font-medium">{new Date(inspection.inspectionDate).toLocaleString()}</p>
+                  <span className="text-blue-600 text-sm font-medium">Inspection Date:</span>
+                  <p className="font-medium text-gray-800">{new Date(inspection.inspectionDate).toLocaleString()}</p>
                 </div>
               )}
               {inspection.inspectedBy && (
                 <div>
-                  <span className="text-gray-500 text-sm">Inspected By:</span>
-                  <p className="font-medium">{inspection.inspectedBy}</p>
+                  <span className="text-blue-600 text-sm font-medium">Inspected By:</span>
+                  <p className="font-medium text-gray-800">{inspection.inspectedBy}</p>
+                </div>
+              )}
+              {inspection.registrationNumber && (
+                <div>
+                  <span className="text-blue-600 text-sm font-medium">Registration Number:</span>
+                  <p className="font-bold text-green-600 text-lg">{inspection.registrationNumber}</p>
                 </div>
               )}
             </div>
           </div>
           
-          <div className="bg-gray-50 p-4 rounded-md">
-            <h2 className="text-lg font-semibold mb-3">Vehicle Details</h2>
+          {/* Owner Details */}
+          <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border border-green-200">
+            <div className="flex items-center mb-4">
+              <User className="w-6 h-6 text-green-600 mr-2" />
+              <h2 className="text-lg font-semibold text-green-800">Owner Information</h2>
+            </div>
             {inspection.vehicleDetails ? (
-              <div className="space-y-2">
-                {inspection.vehicleDetails.make && (
-                  <div>
-                    <span className="text-gray-500 text-sm">Make:</span>
-                    <p className="font-medium">{inspection.vehicleDetails.make}</p>
-                  </div>
-                )}
-                {inspection.vehicleDetails.model && (
-                  <div>
-                    <span className="text-gray-500 text-sm">Model:</span>
-                    <p className="font-medium">{inspection.vehicleDetails.model}</p>
-                  </div>
-                )}
-                {inspection.vehicleDetails.year && (
-                  <div>
-                    <span className="text-gray-500 text-sm">Year:</span>
-                    <p className="font-medium">{inspection.vehicleDetails.year}</p>
-                  </div>
-                )}
-                {inspection.vehicleDetails.vin && (
-                  <div>
-                    <span className="text-gray-500 text-sm">VIN:</span>
-                    <p className="font-medium">{inspection.vehicleDetails.vin}</p>
-                  </div>
-                )}
-                {inspection.vehicleDetails.color && (
-                  <div>
-                    <span className="text-gray-500 text-sm">Color:</span>
-                    <p className="font-medium">{inspection.vehicleDetails.color}</p>
-                  </div>
-                )}
-                {inspection.registrationNumber && (
-                  <div>
-                    <span className="text-gray-500 text-sm">Registration Number:</span>
-                    <p className="font-medium">{inspection.registrationNumber}</p>
-                  </div>
-                )}
+              <div className="space-y-3">
+                <div>
+                  <span className="text-green-600 text-sm font-medium">Full Name:</span>
+                  <p className="font-medium text-gray-800">{inspection.vehicleDetails.ownerName || 'N/A'}</p>
+                </div>
+                <div>
+                  <span className="text-green-600 text-sm font-medium">CNIC Number:</span>
+                  <p className="font-medium text-gray-800">{inspection.vehicleDetails.cnic || 'N/A'}</p>
+                </div>
+                <div>
+                  <span className="text-green-600 text-sm font-medium">Father's Name:</span>
+                  <p className="font-medium text-gray-800">{inspection.vehicleDetails.fatherName || 'N/A'}</p>
+                </div>
               </div>
             ) : (
-              <p className="text-gray-500">No vehicle details available</p>
+              <p className="text-gray-500 italic">No owner information available</p>
+            )}
+          </div>
+          
+          {/* Vehicle Details */}
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg border border-purple-200">
+            <div className="flex items-center mb-4">
+              <Car className="w-6 h-6 text-purple-600 mr-2" />
+              <h2 className="text-lg font-semibold text-purple-800">Vehicle Information</h2>
+            </div>
+            {inspection.vehicleDetails ? (
+              <div className="space-y-3">
+                <div>
+                  <span className="text-purple-600 text-sm font-medium">Make & Model:</span>
+                  <p className="font-bold text-gray-800 text-lg">
+                    {inspection.vehicleDetails.make} {inspection.vehicleDetails.model}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-purple-600 text-sm font-medium">Manufacturing Year:</span>
+                  <p className="font-medium text-gray-800">{inspection.vehicleDetails.manufacturingYear || 'N/A'}</p>
+                </div>
+                <div>
+                  <span className="text-purple-600 text-sm font-medium">Engine Number:</span>
+                  <p className="font-medium text-gray-800">{inspection.vehicleDetails.engineNumber || 'N/A'}</p>
+                </div>
+                <div>
+                  <span className="text-purple-600 text-sm font-medium">Chassis Number:</span>
+                  <p className="font-medium text-gray-800 text-sm">{inspection.vehicleDetails.chassisNumber || 'N/A'}</p>
+                </div>
+                <div>
+                  <span className="text-purple-600 text-sm font-medium">Fuel Type:</span>
+                  <p className="font-medium text-gray-800">{inspection.vehicleDetails.fuelType || 'N/A'}</p>
+                </div>
+                <div>
+                  <span className="text-purple-600 text-sm font-medium">Vehicle Type:</span>
+                  <p className="font-medium text-gray-800">{inspection.vehicleDetails.vehicleType ? `${inspection.vehicleDetails.engineCapacity} CC` : 'N/A'}</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-500 italic">No vehicle information available</p>
             )}
           </div>
         </div>

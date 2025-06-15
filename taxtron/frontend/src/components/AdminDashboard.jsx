@@ -1,4 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../context/authContext';
+import { useNavigate } from 'react-router-dom';
+
+
 
 export default function AdminDashboard() {
   const [appointments, setAppointments] = useState([]);
@@ -9,6 +13,9 @@ export default function AdminDashboard() {
     scheduledDate: '',
     status: 'Free'
   });
+
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchAppointments();
@@ -91,6 +98,11 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/admin/login');
+  };
+
   const formatDate = (dateString) => {
     const options = {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -110,7 +122,10 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-extrabold text-gray-900">Admin Dashboard</h1>
-          <button onClick={() => setShowAddModal(true)} className="bg-blue-500 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow-md transition">+ Add Appointment</button>
+          <div className="flex space-x-3">
+            <button onClick={() => setShowAddModal(true)} className="bg-blue-500 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow-md transition">+ Add Appointment</button>
+            <button onClick={handleLogout} className="bg-red-500 hover:bg-red-700 text-white px-5 py-2 rounded-lg shadow-md transition">Logout</button>
+          </div>
         </div>
 
         <div className="bg-white rounded-xl shadow overflow-hidden">

@@ -219,7 +219,7 @@ const Fee = () => {
         inspectionId: vehicleData.inspectionId,
         make: vehicleData.vehicleDetails.make,
         model: vehicleData.vehicleDetails.model,
-        year: vehicleData.vehicleDetails.year,
+        Manuyear: vehicleData.vehicleDetails.manufacturingYear,
         engineNumber: vehicleData.vehicleDetails.engineNumber,
         chassisNumber: vehicleData.vehicleDetails.chassisNumber,
         vehicleType: vehicleData.vehicleDetails.vehicleType,
@@ -395,16 +395,16 @@ const Fee = () => {
               <span className="value">{vehicleDetails.model}</span>
             </div>
             <div className="detail-item">
-              <span className="label">Year:</span>
-              <span className="value">{vehicleDetails.year}</span>
+              <span className="label">Manufacturing Year:</span>
+              <span className="value">{vehicleDetails.manufacturingYear}</span>
             </div>
             <div className="detail-item">
               <span className="label">Type:</span>
               <span className="value">{vehicleDetails.vehicleType}</span>
             </div>
             <div className="detail-item">
-              <span className="label">Engine Capacity:</span>
-              <span className="value">{vehicleDetails.engineCapacity}cc</span>
+              <span className="label">Variant:</span>
+              <span className="value">{vehicleDetails.variant}</span>
             </div>
             <div className="detail-item">
               <span className="label">Registration Number:</span>
@@ -420,8 +420,8 @@ const Fee = () => {
             <span className="fee-value">PKR {vehicleDetails.regFee.toLocaleString()}</span>
           </div>
           <div className="fee-item">
-            <span className="fee-label">Tax (Payable Later):</span>
-            <span className="fee-value">Not Set</span>
+            {/* <span className="fee-label">Tax (Payable Later):</span> */}
+            {/* <span className="fee-value">Not Set</span> */}
           </div>
           <div className="fee-item total-fee">
             <span className="fee-label">Total Registration Fee:</span>

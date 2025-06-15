@@ -35,9 +35,21 @@ const VehicleRegistration = () => {
     fuelType: ''
   });
 
-  const handleChange = (e) => {
-    setVehicleData({ ...vehicleData, [e.target.name]: e.target.value });
-  };
+ const handleChange = (e) => {
+  const { name, value } = e.target;
+
+  if (name === 'cnic') {
+    // Allow only numbers and limit to 13 digits
+    if (!/^\d*$/.test(value)) return;
+    if (value.length > 13) return;
+  } else if (name === 'ownerName' || name === 'fatherName') {
+    // Allow only alphabets and spaces
+    if (!/^[a-zA-Z\s]*$/.test(value)) return;
+  }
+
+  setVehicleData({ ...vehicleData, [name]: value });
+};
+
 
   // Fetch available appointment dates on component mount
   useEffect(() => {

@@ -1,19 +1,46 @@
-// src/context/AuthContext.jsx
-import { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
-  const login = () => setIsAuthenticated(true);
-  const logout = () => setIsAuthenticated(false);
+export const AuthProvider = ({ children }) => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check if user is already logged in when the app loads
+  useEffect(() => {
+    const adminToken = localStorage.getItem('adminToken');
+    if (adminToken) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  const login = () => {
+    // Set a token in localStorage to persist login state
+    localStorage.setItem('adminToken', 'admin-logged-in');
+    setIsLoggedIn(true);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('adminToken');
+    setIsLoggedIn(false);
+  };
+
+  const value = {
+    isLoggedIn,
+    login,
+    logout
+  };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
-
-export const useAuth = () => useContext(AuthContext);

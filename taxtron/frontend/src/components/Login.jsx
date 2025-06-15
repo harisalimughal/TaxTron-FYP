@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 
 const Login = () => {
@@ -9,12 +9,16 @@ const Login = () => {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get the intended destination from location state, default to admin dashboard
+  const from = location.state?.from?.pathname || "/admin/dashboard";
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (username === "admin" && password === "admin123") {
       login();
-      navigate("/admin/dashboard");
+      navigate(from, { replace: true });
     } else {
       setError("Invalid username or password");
     }
@@ -58,11 +62,10 @@ const Login = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-500  text-white font-semibold py-3 rounded-lg hover:from-purple-700 hover:to-indigo-700 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            className="w-full bg-blue-500 text-white font-semibold py-3 rounded-lg hover:bg-blue-600 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           >
             Log In
           </button>
-
         </form>
       </div>
     </div>

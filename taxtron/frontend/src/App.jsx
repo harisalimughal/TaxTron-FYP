@@ -11,19 +11,14 @@ import PayFee from './components/fee';
 import Notifications from "./components/notifications";
 import FAQ from "./components/FAQ";
 import ContactUs from "./components/Contact";
-import { AuthProvider } from "./context/authContext";
+import { AuthProvider, useAuth } from "./context/authContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./components/Login";
 
-
-
-// const ProtectedAdminRoute = ({ children }) => {
-//   const token = localStorage.getItem('adminToken');
-//   return token ? children : <Navigate to="/admin/login" />;
-// };
-
-const App = () => {
+// Create a separate component for routes that uses auth context
+const AppRoutes = () => {
   const [account, setAccount] = useState("");
+  const { isLoggedIn } = useAuth();
 
   useEffect(() => {
     const checkMetaMaskConnection = async () => {
@@ -37,22 +32,43 @@ const App = () => {
   }, []);
 
   return (
+    <Routes>
+      <Route path="/" element={<MetaMaskLogin setAccount={setAccount} />} />
+      <Route path="/dashboard" element={account ? <Dashboard account={account} /> : <Navigate to="/" />} />
+      <Route path="/register" element={<RegisterVehicle />} />
+      <Route path="/view-nft/:inspectionId" element={<NFTPage />} />
+      <Route path="/pay-fee/:inspectionId" element={<PayFee />} />
+      <Route path="/admin/inspect/" element={<AdminInspect />} />
+      <Route path="/notifications/" element={<Notifications />} />
+      <Route path="/faqs" element={<FAQ />} />
+      <Route path="/contact" element={<ContactUs />} />
+      
+      {/* Admin routes with proper authentication */}
+      <Route 
+        path="/admin/login" 
+        element={isLoggedIn ? <Navigate to="/admin/dashboard" /> : <Login />} 
+      />
+      <Route 
+        path="/admin/dashboard" 
+        element={
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Redirect /login to /admin/login for consistency */}
+      <Route path="/login" element={<Navigate to="/admin/login" />} />
+    </Routes>
+  );
+};
+
+const App = () => {
+  return (
     <AuthProvider>
-    <Router>
-      <Routes>
-        <Route path="/" element={<MetaMaskLogin setAccount={setAccount} />} />
-        <Route path="/dashboard" element={account ? <Dashboard account={account} /> : <Navigate to="/" />} />
-        <Route path="/register" element={<RegisterVehicle />} />
-        <Route path="/view-nft/:inspectionId" element={<NFTPage />} />
-        <Route path="/pay-fee/:inspectionId" element={<PayFee />} />
-        <Route path="/admin/inspect/" element={<AdminInspect />} />
-        <Route path="/notifications/" element={<Notifications />} />
-        <Route path="/faqs" element={<FAQ />} />
-        <Route path="/contact" element={<ContactUs />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>}/>
-      </Routes>
-    </Router>
+      <Router>
+        <AppRoutes />
+      </Router>
     </AuthProvider>
   );
 };

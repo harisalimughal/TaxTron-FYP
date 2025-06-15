@@ -739,7 +739,6 @@ const downloadCertificateAsPDF = async () => {
             ) : (
               /* Placeholder when NFT not generated */
               <div className="text-center py-12">
-                <div className="text-6xl mb-4">🏆</div>
                 <h3 className="text-xl font-semibold text-white mb-2">
                   NFT Certificate Ready
                 </h3>
