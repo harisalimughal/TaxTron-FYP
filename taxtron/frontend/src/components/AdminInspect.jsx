@@ -156,7 +156,7 @@ export default function AdminInspect() {
                           {inspection.inspectionId.substring(0, 8)}...
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {inspection.ownerDetails?.name || 'N/A'}
+                          {inspection.vehicleDetails?.ownerName || 'N/A'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {inspection.vehicleDetails ? `${inspection.vehicleDetails.make} ${inspection.vehicleDetails.model}` : 'N/A'}
