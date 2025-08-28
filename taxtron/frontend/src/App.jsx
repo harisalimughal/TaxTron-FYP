@@ -14,6 +14,9 @@ import ContactUs from "./components/Contact";
 import { AuthProvider, useAuth } from "./context/authContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./components/Login";
+import OwnershipHistory from "./components/OwnershipHistory";
+import TaxPayment from "./components/TaxPayment";
+import OwnershipTransfer from "./components/OwnershipTransfer";
 
 // Create a separate component for routes that uses auth context
 const AppRoutes = () => {
@@ -36,6 +39,9 @@ const AppRoutes = () => {
       <Route path="/" element={<MetaMaskLogin setAccount={setAccount} />} />
       <Route path="/dashboard" element={account ? <Dashboard account={account} /> : <Navigate to="/" />} />
       <Route path="/register" element={<RegisterVehicle />} />
+      <Route path="/history" element={<OwnershipHistory />} />
+      <Route path="/transfer" element={<OwnershipTransfer/>}/>
+      <Route path="/tax-payment" element={<TaxPayment/>} />
       <Route path="/view-nft/:inspectionId" element={<NFTPage />} />
       <Route path="/pay-fee/:inspectionId" element={<PayFee />} />
       <Route path="/admin/inspect/" element={<AdminInspect />} />

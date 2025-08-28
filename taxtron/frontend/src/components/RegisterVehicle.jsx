@@ -63,6 +63,19 @@ const VehicleRegistration = () => {
     setInspectionId(uniqueId);
   }, []);
 
+  // Handle pre-filled data from AI chat
+  useEffect(() => {
+    if (location.state?.preFilledData) {
+      const { make, model, manufacturingYear } = location.state.preFilledData;
+      setVehicleData(prev => ({
+        ...prev,
+        make: make || '',
+        model: model || '',
+        manufacturingYear: manufacturingYear || ''
+      }));
+    }
+  }, [location.state]);
+
   // Fetch available appointment dates
   const fetchAppointments = async () => {
     setAppointmentLoading(true);

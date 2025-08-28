@@ -135,7 +135,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -148,7 +149,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -172,7 +174,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -191,7 +194,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [],
@@ -204,7 +208,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -313,7 +318,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -376,7 +382,8 @@
       "name": "registerVehicle",
       "outputs": [],
       "stateMutability": "payable",
-      "type": "function"
+      "type": "function",
+      "payable": true
     },
     {
       "inputs": [
@@ -412,7 +419,8 @@
       "name": "payTax",
       "outputs": [],
       "stateMutability": "payable",
-      "type": "function"
+      "type": "function",
+      "payable": true
     },
     {
       "inputs": [
@@ -528,7 +536,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -644,7 +653,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -663,7 +673,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -682,7 +693,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -701,7 +713,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -720,7 +733,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -749,7 +763,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -798,7 +813,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     },
     {
       "inputs": [
@@ -863,7 +879,8 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
+      "type": "function",
+      "constant": true
     }
   ],
   "metadata": "{\"compiler\":{\"version\":\"0.8.17+commit.8df45f5f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_treasury\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"string\",\"name\":\"inspectionId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"newRegistrationNumber\",\"type\":\"string\"}],\"name\":\"RegistrationNumberUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"string\",\"name\":\"inspectionId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"taxAmount\",\"type\":\"uint256\"}],\"name\":\"TaxAmountSet\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"string\",\"name\":\"inspectionId\",\"type\":\"string\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"taxAmount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"TaxPaid\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"string\",\"name\":\"inspectionId\",\"type\":\"string\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"registrationNumber\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"registrationFee\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"VehicleRegistered\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"allInspectionIds\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_inspectionId\",\"type\":\"string\"}],\"name\":\"deactivateVehicle\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"emergencyWithdraw\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_inspectionId\",\"type\":\"string\"}],\"name\":\"getPaymentStatus\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"registrationPaid\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"taxPaid\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"taxAmount\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_inspectionId\",\"type\":\"string\"}],\"name\":\"getTaxAmount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getTotalVehicles\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_inspectionId\",\"type\":\"string\"}],\"name\":\"getVehicle\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"inspectionId\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"make\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"model\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"year\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"engineNumber\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"chassisNumber\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"vehicleType\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"engineCapacity\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"registrationNumber\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"vehicleOwner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"registrationFee\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"registrationFeePaid\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"registrationTimestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"taxAmount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"taxPaid\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"taxPaidTimestamp\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"registrationTxHash\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"taxTxHash\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"isActive\",\"type\":\"bool\"}],\"internalType\":\"struct VehicleRegistration.Vehicle\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_registrationNumber\",\"type\":\"string\"}],\"name\":\"getVehicleByRegistration\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"inspectionId\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"make\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"model\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"year\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"engineNumber\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"chassisNumber\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"vehicleType\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"engineCapacity\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"registrationNumber\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"vehicleOwner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"registrationFee\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"registrationFeePaid\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"registrationTimestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"taxAmount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"taxPaid\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"taxPaidTimestamp\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"registrationTxHash\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"taxTxHash\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"isActive\",\"type\":\"bool\"}],\"internalType\":\"struct VehicleRegistration.Vehicle\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_owner\",\"type\":\"address\"}],\"name\":\"getVehiclesByOwner\",\"outputs\":[{\"internalType\":\"string[]\",\"name\":\"\",\"type\":\"string[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_inspectionId\",\"type\":\"string\"}],\"name\":\"isRegistrationFeePaid\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_inspectionId\",\"type\":\"string\"}],\"name\":\"isTaxPaid\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_inspectionId\",\"type\":\"string\"}],\"name\":\"isVehicleActive\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"ownerVehicles\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_inspectionId\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"_taxTxHash\",\"type\":\"string\"}],\"name\":\"payTax\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_inspectionId\",\"type\":\"string\"}],\"name\":\"reactivateVehicle\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_inspectionId\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"_make\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"_model\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"_year\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"_engineNumber\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"_chassisNumber\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"_vehicleType\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"_engineCapacity\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"_registrationNumber\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"_registrationFee\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"_registrationTxHash\",\"type\":\"string\"}],\"name\":\"registerVehicle\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"name\":\"registrationNumbers\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_inspectionId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"_taxAmount\",\"type\":\"uint256\"}],\"name\":\"setTaxAmount\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_inspectionId\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"treasury\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_inspectionId\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"_newRegistrationNumber\",\"type\":\"string\"}],\"name\":\"updateRegistrationNumber\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_newTreasury\",\"type\":\"address\"}],\"name\":\"updateTreasury\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"name\":\"vehicles\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"inspectionId\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"make\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"model\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"year\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"engineNumber\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"chassisNumber\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"vehicleType\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"engineCapacity\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"registrationNumber\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"vehicleOwner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"registrationFee\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"registrationFeePaid\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"registrationTimestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"taxAmount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"taxPaid\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"taxPaidTimestamp\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"registrationTxHash\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"taxTxHash\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"isActive\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/VehicleRegistry.sol\":\"VehicleRegistration\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[],\"viaIR\":true},\"sources\":{\"project:/contracts/VehicleRegistry.sol\":{\"keccak256\":\"0xc7789fcb2c39a32e8601cd9f65d4ba054cfb0582745a2b7137209d89e234db32\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://d2f26f8c5c73287144f7f6ff63f4c34f8f08b13183a51312e1e7595e5a3b0100\",\"dweb:/ipfs/QmYGC6dhwf61yEv3cafCKjfajH2tYpgwLGXaWqBbFj7A6r\"]}},\"version\":1}",
@@ -11746,12 +11763,13 @@
     "5777": {
       "events": {},
       "links": {},
-      "address": "0x4E918C44F498184F3F0Cc6E3ECB88123dceD8500",
-      "transactionHash": "0x7489f2a285c3272811e18df19ff971a575419f0b4157d27d78390effd9dd7431"
+      "address": "0x98e503A4364ACdfA19441f07e81F4FFd53Dab75B",
+      "transactionHash": "0xaf8c0494f33e3f51fe1bce52ed271df122e8bca397933cd3bacb50f271657fb1"
     }
   },
   "schemaVersion": "3.4.16",
-  "updatedAt": "2025-06-15T06:41:03.323Z",
+  "updatedAt": "2025-06-17T03:32:54.888Z",
+  "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",
     "methods": {},

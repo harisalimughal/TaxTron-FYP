@@ -9,7 +9,7 @@ import jsPDF from 'jspdf';
 const NFTPage = () => {
   const { inspectionId } = useParams();
   const NFTPageRef = useRef(null);
-  const certificateRef = useRef(null); // Added specific ref for certificate
+  const certificateRef = useRef(null);
   
   const [vehicleData, setVehicleData] = useState(null);
   const [blockchainData, setBlockchainData] = useState(null);
@@ -20,13 +20,12 @@ const NFTPage = () => {
   const [nftGenerated, setNftGenerated] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
   const [web3, setWeb3] = useState(null);
-  const [isPaid, setIsPaid] = useState(false);
   const [transactionHash, setTransactionHash] = useState('');
   const [showCertificate, setShowCertificate] = useState(false);
-  const [isDownloadingPDF, setIsDownloadingPDF] = useState(false); // Added state for PDF download
+  const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
 
   // Contract configurations
-  const VEHICLE_REGISTRY_ADDRESS = "0x4E918C44F498184F3F0Cc6E3ECB88123dceD8500";
+  const VEHICLE_REGISTRY_ADDRESS = "0x98e503A4364ACdfA19441f07e81F4FFd53Dab75B";
   const VEHICLE_NFT_ADDRESS = "0xc303134658E22e75b1494a1FCF5B91222380809f"; 
 
   // Get the ABI in the correct format
@@ -59,7 +58,6 @@ const NFTPage = () => {
         const accounts = await window.ethereum.request({ method: 'eth_accounts' });
         if (accounts.length > 0) {
           setWalletAddress(accounts[0]);
-          checkBlockchainPaymentStatus(accounts[0]);
         }
       } catch (error) {
         console.error('Error checking wallet connection:', error);
@@ -72,40 +70,11 @@ const NFTPage = () => {
       try {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         setWalletAddress(accounts[0]);
-        checkBlockchainPaymentStatus(accounts[0]);
       } catch (error) {
         setError('Failed to connect wallet');
       }
     } else {
       setError('MetaMask not installed');
-    }
-  };
-
-  const checkBlockchainPaymentStatus = async (address) => {
-    if (!address || !inspectionId || !web3) return;
-    
-    try {
-      const contract = new web3.eth.Contract(CONTRACT_ABI, VEHICLE_REGISTRY_ADDRESS);
-      
-      try {
-        const paymentStatus = await contract.methods.getPaymentStatus(inspectionId).call();
-        setIsPaid(paymentStatus.registrationPaid);
-        
-        if (paymentStatus.registrationPaid) {
-          const vehicleData = await contract.methods.getVehicle(inspectionId).call();
-          setTransactionHash(vehicleData.registrationTxHash);
-          setBlockchainData({
-            registrationNumber: vehicleData.registrationNumber,
-            owner: vehicleData.owner,
-            registrationTxHash: vehicleData.registrationTxHash,
-            isRegistered: vehicleData.isRegistered
-          });
-        }
-      } catch (contractError) {
-        console.log('Vehicle not found on blockchain, checking backend...');
-      }
-    } catch (error) {
-      console.error('Error checking blockchain payment status:', error);
     }
   };
 
@@ -123,10 +92,6 @@ const NFTPage = () => {
         setVehicleData(data.data);
         console.log('Fetched vehicle data for inspection ID:', inspectionId, data.data);
         
-        if (!isPaid) {
-          await checkPaymentStatus(inspectionId);
-        }
-        
         await fetchBlockchainData();
       } else {
         setError(`Vehicle data not found for inspection ID: ${inspectionId}. API Response: ${data.message}`);
@@ -137,21 +102,6 @@ const NFTPage = () => {
       setError(`Failed to fetch vehicle data for ${inspectionId}: ${error.message}`);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const checkPaymentStatus = async (inspectionId) => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/inspections/${inspectionId}/payment-status`);
-      if (response.ok) {
-        const data = await response.json();
-        if (!isPaid) {
-          setIsPaid(data.isPaid || false);
-          setTransactionHash(data.transactionHash || '');
-        }
-      }
-    } catch (error) {
-      console.log('Payment status check failed:', error);
     }
   };
 
@@ -262,7 +212,7 @@ const NFTPage = () => {
           {"trait_type": "Engine Number", "value": vehicleData.vehicleDetails?.engineNumber || 'Unknown'},
           {"trait_type": "Chassis Number", "value": vehicleData.vehicleDetails?.chassisNumber || 'Unknown'},
           {"trait_type": "Fuel Type", "value": vehicleData.vehicleDetails?.fuelType || 'Unknown'},
-          {"trait_type": "Registration Number", "value": vehicleData.registrationNumber || blockchainData?.registrationNumber || 'Pending'},
+          {"trait_type": "Registration Number", "value": vehicleData.registrationNumber || 'Pending'},
           {"trait_type": "Owner", "value": vehicleData.vehicleDetails?.ownerName || 'Unknown'},
           {"trait_type": "Inspector", "value": vehicleData.inspectedBy || 'Unknown'},
           {"trait_type": "Inspection Date", "value": vehicleData.inspectionDate || 'Unknown'}
@@ -277,7 +227,7 @@ const NFTPage = () => {
       const model = vehicleData.vehicleDetails?.model || '';
       const year = (vehicleData.vehicleDetails?.manufacturingYear || vehicleData.vehicleDetails?.year || '').toString();
       const vehicleType = vehicleData.vehicleDetails?.vehicleType || '';
-      const registrationNumber = vehicleData.registrationNumber || blockchainData?.registrationNumber || '';
+      const registrationNumber = vehicleData.registrationNumber || '';
       
       try {
         // Try the extended function first (with vehicle details)
@@ -406,28 +356,24 @@ Registration: ${nftData.vehicleInfo?.registrationNumber}`;
     }
   };
 
+  const downloadCertificateAsPDF = async () => {
+    const element = certificateRef.current;
+    
+    const canvas = await html2canvas(element, {
+      useCORS: true,
+      allowTaint: true,
+      scale: 0.75,
+    });
 
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
 
+    const imgWidth = 100;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-const downloadCertificateAsPDF = async () => {
-  const element = certificateRef.current;
-  
-  const canvas = await html2canvas(element, {
-    useCORS: true,
-    allowTaint: true,
-    scale: 0.75, // Reduce this for smaller canvas
-  });
-
-  const imgData = canvas.toDataURL('image/png');
-  const pdf = new jsPDF('p', 'mm', 'a4');
-
-  const imgWidth = 100; // Adjust this based on your layout
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-  pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-  pdf.save(`vehicle-certificate-${inspectionId}.pdf`);
-};
-
+    pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+    pdf.save(`vehicle-certificate-${inspectionId}.pdf`);
+  };
 
   // Loading and error states
   if (!inspectionId) {
@@ -488,19 +434,8 @@ const downloadCertificateAsPDF = async () => {
   return (
     <div ref={NFTPageRef} className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-6 px-4">
       <div className="max-w-6xl mx-auto">
-        {/* Status display showing both payment and NFT status */}
+        {/* Status display showing NFT status only */}
         <div className="mb-4 flex gap-2 justify-center">
-          {/* Payment Status */}
-          {isPaid ? (
-            <div className="bg-green-600/20 text-green-400 px-3 py-1 rounded-full text-xs font-semibold">
-              ✓ Registered
-            </div>
-          ) : (
-            <div className="bg-red-600/20 text-red-400 px-3 py-1 rounded-full text-xs font-semibold">
-              ✗ Payment Pending
-            </div>
-          )}
-          
           {/* NFT Status */}
           {nftGenerated ? (
             <div className="bg-purple-600/20 text-purple-400 px-3 py-1 rounded-full text-xs font-semibold">
@@ -508,7 +443,7 @@ const downloadCertificateAsPDF = async () => {
             </div>
           ) : (
             <div className="bg-orange-600/20 text-orange-400 px-3 py-1 rounded-full text-xs font-semibold">
-              ⏳ NFT Pending
+              ⏳ NFT Ready to Generate
             </div>
           )}
         </div>
@@ -561,11 +496,11 @@ const downloadCertificateAsPDF = async () => {
               </div>
 
               {/* Registration Number */}
-              {(vehicleData.registrationNumber || blockchainData?.registrationNumber) && (
+              {vehicleData.registrationNumber && (
                 <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 p-4 rounded-lg border border-blue-500/30">
                   <p className="text-slate-400 text-sm">Registration Number</p>
                   <p className="text-white font-bold text-lg">
-                    {vehicleData.registrationNumber || blockchainData?.registrationNumber}
+                    {vehicleData.registrationNumber}
                   </p>
                 </div>
               )}
@@ -587,8 +522,8 @@ const downloadCertificateAsPDF = async () => {
                 </div>
               )}
 
-              {/* Generate NFT Button */}
-              {walletAddress && !nftGenerated && isPaid && (
+              {/* Generate NFT Button - Always available when wallet is connected */}
+              {walletAddress && !nftGenerated && (
                 <button
                   onClick={generateNFT}
                   disabled={isGeneratingNFT}
@@ -600,16 +535,19 @@ const downloadCertificateAsPDF = async () => {
                       Generating NFT...
                     </>
                   ) : (
-                    <>🎨 View NFT Certificate</>
+                    <>🎨 Generate NFT Certificate</>
                   )}
                 </button>
               )}
 
-              {/* Payment Required Message */}
-              {walletAddress && !isPaid && (
-                <div className="bg-orange-600/20 text-orange-300 p-3 rounded-lg text-center">
-                  <p className="text-sm">⚠️ Payment required before generating NFT</p>
-                </div>
+              {/* View Certificate Button when NFT is generated */}
+              {walletAddress && nftGenerated && !showCertificate && (
+                <button
+                  onClick={() => setShowCertificate(true)}
+                  className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center"
+                >
+                  📋 View NFT Certificate
+                </button>
               )}
             </div>
           </div>
@@ -678,7 +616,7 @@ const downloadCertificateAsPDF = async () => {
                   </div>
                 )}
 
-                {/* Vehicle Information - Continuing from where it was cut off */}
+                {/* Vehicle Information */}
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between items-center">
                     <span className="opacity-90">Vehicle:</span>
@@ -700,12 +638,12 @@ const downloadCertificateAsPDF = async () => {
                     <span className="font-semibold text-xs">{vehicleDetails?.ownerName}</span>
                   </div>
                   
-                  {(vehicleData.registrationNumber || blockchainData?.registrationNumber) && (
+                  {vehicleData.registrationNumber && (
                     <div className="bg-white/20 p-3 rounded-lg mt-4">
                       <div className="text-center">
                         <p className="text-xs opacity-90">Registration Number</p>
                         <p className="font-bold text-lg tracking-wider">
-                          {vehicleData.registrationNumber || blockchainData?.registrationNumber}
+                          {vehicleData.registrationNumber}
                         </p>
                       </div>
                     </div>
@@ -745,15 +683,14 @@ const downloadCertificateAsPDF = async () => {
                 <p className="text-slate-400 mb-6">
                   {!walletAddress 
                     ? "Connect your wallet to generate your NFT certificate"
-                    : !isPaid 
-                    ? "Complete payment to unlock NFT generation"
-                    : "Click 'View NFT Certificate' to generate your digital certificate"
+                    : "Click 'Generate NFT Certificate' to create your digital certificate"
                   }
                 </p>
                 
                 {nftGenerated && !showCertificate && (
                   <button
                     onClick={() => setShowCertificate(true)}
+                
                     className="bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-700 hover:to-purple-700 text-white py-2 px-6 rounded-lg font-semibold transition-all duration-200"
                   >
                     View Certificate

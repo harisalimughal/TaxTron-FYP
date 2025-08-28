@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   Home,
+  CheckCheck,
   Bell,
   HelpCircle,
   Phone,
@@ -12,11 +13,15 @@ import {
   CreditCard,
   History,
   ArrowLeft,
+  Shield,
+  MessageCircle,
 } from "lucide-react";
+import AIChatSupport from "./AIChatSupport";
 
 const Dashboard = ({ account }) => {
   const navigate = useNavigate();
   const [notificationCount, setNotificationCount] = useState(0);
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
 
   const handleServiceSelection = (path) => {
     navigate(path, { state: { account } });
@@ -30,6 +35,20 @@ const Dashboard = ({ account }) => {
   };
   const handleContactsClick = () => {
     navigate("/contact", { state: { account } });
+  };
+
+  const handleAIChatToggle = () => {
+    setIsAIChatOpen(!isAIChatOpen);
+  };
+
+  const handleStartRegistration = (vehicleData) => {
+    // Navigate to registration page with pre-filled data
+    navigate("/register", { 
+      state: { 
+        account,
+        preFilledData: vehicleData 
+      } 
+    });
   };
 
   useEffect(() => {
@@ -84,7 +103,7 @@ const Dashboard = ({ account }) => {
                 onClick={handleNotificationsClick}
                 className="w-full flex items-center px-6 py-2 text-gray-400 hover:bg-gray-800 text-left"
               >
-                <Bell className="w-5 h-5 mr-3" />
+                <CheckCheck className="w-5 h-5 mr-3" />
                 Inspections
                 <span className="ml-auto text-sm text-indigo-400 bg-gray-800 px-2 py-0.5 rounded-full">
                   {notificationCount}
@@ -94,16 +113,24 @@ const Dashboard = ({ account }) => {
                 onClick={handleContactsClick}
                 className="w-full flex items-center px-6 py-2 text-gray-400 hover:bg-gray-800 text-left"
               >
-                <Bell className="w-5 h-5 mr-3" />
+                <Phone className="w-5 h-5 mr-3" />
                 Contact
                 <span className="ml-auto text-sm text-indigo-400 bg-gray-800 px-2 py-0.5 rounded-full">
                 </span>
+              </button>
+              
+              <button
+                onClick={handleAIChatToggle}
+                className="w-full flex items-center px-6 py-2 text-gray-400 hover:bg-gray-800 text-left"
+              >
+                <MessageCircle className="w-5 h-5 mr-3" />
+                AI Assistant
               </button>
               <button
                 onClick={handleFaqClick}
                 className="w-full flex items-center px-6 py-2 text-gray-400 hover:bg-gray-800 text-left"
               >
-                <Bell className="w-5 h-5 mr-3" />
+                <HelpCircle className="w-5 h-5 mr-3" />
                 FAQs
                 <span className="ml-auto text-sm text-indigo-400 bg-gray-800 px-2 py-0.5 rounded-full">
                 </span>
@@ -211,6 +238,14 @@ const Dashboard = ({ account }) => {
           </div>
         </div>
       </div>
+      
+      {/* AI Chat Support */}
+      <AIChatSupport
+        isOpen={isAIChatOpen}
+        onClose={() => setIsAIChatOpen(false)}
+        account={account}
+        onStartRegistration={handleStartRegistration}
+      />
     </div>
   );
 };

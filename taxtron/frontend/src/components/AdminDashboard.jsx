@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function AdminDashboard() {
   const [appointments, setAppointments] = useState([]);
@@ -13,10 +14,14 @@ export default function AdminDashboard() {
     scheduledDate: '',
     status: 'Free'
   });
+  const navigate = useNavigate();
 
-  // Mock auth and navigation functions for demo
-  const logout = () => console.log('Logout clicked');
-  const navigate = (path) => console.log('Navigate to:', path);
+
+ const logout = () => {
+  localStorage.removeItem('adminToken');
+  navigate('/admin/login/')
+};
+  
 
   useEffect(() => {
     fetchAppointments();
@@ -164,7 +169,8 @@ export default function AdminDashboard() {
               date: row.appointmentDate || new Date().toISOString().split('T')[0],
               time: row.appointmentTime || '09:00',
               appointmentId: row.appointmentId || 'BULK_UPLOAD'
-            }
+            },
+            isPaid:true,
           };
 
           const response = await fetch('http://localhost:5000/api/inspections', {
@@ -199,7 +205,6 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     logout();
-    navigate('/admin/login');
   };
 
   const formatDate = (dateString) => {
