@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract VehicleNFT is ERC721, ERC721URIStorage, Ownable {
-    using Counters for Counters.Counter;
-    
-    Counters.Counter private _tokenIdCounter;
+    uint256 private _tokenIdCounter;
     
     // Mapping from inspection ID to token ID
     mapping(string => uint256) public inspectionToTokenId;
@@ -44,15 +41,15 @@ contract VehicleNFT is ERC721, ERC721URIStorage, Ownable {
         string registrationNumber
     );
     
-    constructor() ERC721("Vehicle Certificate NFT", "VCNFT") {
-        // No need for VehicleRegistration contract dependency
+    constructor(address initialOwner) ERC721("Vehicle Certificate NFT", "VCNFT") Ownable(initialOwner) {
+        _tokenIdCounter = 1; // Start from 1
     }
     
     /**
      * @dev Mint NFT for a vehicle (independent version)
      * @param inspectionId The vehicle inspection ID
      * @param to Address to mint NFT to
-     * @param tokenURI Metadata URI for the NFT
+     * @param _tokenURI Metadata URI for the NFT
      * @param make Vehicle make (optional, for on-chain storage)
      * @param model Vehicle model (optional, for on-chain storage)
      * @param year Vehicle year (optional, for on-chain storage)
@@ -62,7 +59,7 @@ contract VehicleNFT is ERC721, ERC721URIStorage, Ownable {
     function mintVehicleNFT(
         string memory inspectionId,
         address to,
-        string memory tokenURI,
+        string memory _tokenURI,
         string memory make,
         string memory model,
         string memory year,
@@ -77,11 +74,11 @@ contract VehicleNFT is ERC721, ERC721URIStorage, Ownable {
         require(!nftMinted[inspectionId], "NFT already minted for this vehicle");
         
         // Mint the NFT
-        uint256 tokenId = _tokenIdCounter.current();
-        _tokenIdCounter.increment();
+        uint256 tokenId = _tokenIdCounter;
+        _tokenIdCounter++;
         
         _safeMint(to, tokenId);
-        _setTokenURI(tokenId, tokenURI);
+        _setTokenURI(tokenId, _tokenURI);
         
         // Update mappings
         inspectionToTokenId[inspectionId] = tokenId;
@@ -99,7 +96,7 @@ contract VehicleNFT is ERC721, ERC721URIStorage, Ownable {
             mintTimestamp: block.timestamp
         });
         
-        emit VehicleNFTMinted(tokenId, inspectionId, to, tokenURI, make, model, registrationNumber);
+        emit VehicleNFTMinted(tokenId, inspectionId, to, _tokenURI, make, model, registrationNumber);
         
         return tokenId;
     }
@@ -110,9 +107,9 @@ contract VehicleNFT is ERC721, ERC721URIStorage, Ownable {
     function mintVehicleNFT(
         string memory inspectionId,
         address to,
-        string memory tokenURI
+        string memory _tokenURI
     ) public returns (uint256) {
-        return mintVehicleNFT(inspectionId, to, tokenURI, "", "", "", "", "");
+        return mintVehicleNFT(inspectionId, to, _tokenURI, "", "", "", "", "");
     }
     
     /**
@@ -135,7 +132,7 @@ contract VehicleNFT is ERC721, ERC721URIStorage, Ownable {
         view 
         returns (string memory) 
     {
-        require(_exists(tokenId), "Token does not exist");
+        require(_ownerOf(tokenId) != address(0), "Token does not exist");
         return tokenIdToInspection[tokenId];
     }
     
@@ -197,7 +194,7 @@ contract VehicleNFT is ERC721, ERC721URIStorage, Ownable {
             uint256 mintTimestamp
         ) 
     {
-        require(_exists(tokenId), "Token does not exist");
+        require(_ownerOf(tokenId) != address(0), "Token does not exist");
         
         string memory inspection = tokenIdToInspection[tokenId];
         VehicleInfo memory info = vehicleInfo[inspection];
@@ -218,7 +215,7 @@ contract VehicleNFT is ERC721, ERC721URIStorage, Ownable {
      * @dev Get total number of minted NFTs
      */
     function totalSupply() public view returns (uint256) {
-        return _tokenIdCounter.current();
+        return _tokenIdCounter - 1; // Subtract 1 since we start from 1
     }
     
     /**
@@ -227,28 +224,30 @@ contract VehicleNFT is ERC721, ERC721URIStorage, Ownable {
     function adminMintNFT(
         string memory inspectionId,
         address to,
-        string memory tokenURI,
+        string memory _tokenURI,
         string memory make,
         string memory model,
         string memory year,
         string memory vehicleType,
         string memory registrationNumber
     ) public onlyOwner returns (uint256) {
-        return mintVehicleNFT(inspectionId, to, tokenURI, make, model, year, vehicleType, registrationNumber);
+        return mintVehicleNFT(inspectionId, to, _tokenURI, make, model, year, vehicleType, registrationNumber);
     }
     
     /**
-     * @dev Override required by Solidity for multiple inheritance
+     * @dev Burn NFT and clean up mappings
      */
-    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
-        super._burn(tokenId);
+    function burnNFT(uint256 tokenId) public {
+        require(_ownerOf(tokenId) == msg.sender || owner() == msg.sender, "Not authorized to burn");
         
-        // Clean up mappings
+        // Clean up mappings before burning
         string memory inspectionId = tokenIdToInspection[tokenId];
         delete inspectionToTokenId[inspectionId];
         delete tokenIdToInspection[tokenId];
         delete nftMinted[inspectionId];
         delete vehicleInfo[inspectionId];
+        
+        _burn(tokenId);
     }
     
     /**

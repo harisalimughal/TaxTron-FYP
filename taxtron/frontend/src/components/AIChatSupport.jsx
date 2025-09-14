@@ -9,7 +9,7 @@ const AIChatSupport = ({ isOpen, onClose, account, onStartRegistration }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [registrationState, setRegistrationState] = useState({});
   const messagesEndRef = useRef(null);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(true);
 
   // Initialize with welcome message
   useEffect(() => {
@@ -288,22 +288,23 @@ Would you like me to start the registration process now?`,
       {isMinimized ? (
         <button
           onClick={() => setIsMinimized(false)}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-4 shadow-lg transition-all duration-200"
+          className="bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white rounded-full p-4 shadow-lg transition-all duration-200 transform hover:scale-110"
+          title="Chat with TAXTRO"
         >
           <MessageCircle className="w-6 h-6" />
         </button>
       ) : (
         <div className="bg-white rounded-lg shadow-2xl border border-gray-200 w-96 h-[500px] flex flex-col">
           {/* Header */}
-          <div className="bg-indigo-600 text-white p-4 rounded-t-lg flex items-center justify-between">
+          <div className="bg-gradient-to-r from-green-400 to-green-600 text-white p-4 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Bot className="w-5 h-5" />
-              <span className="font-semibold">TaxTron AI Assistant</span>
+              <span className="font-semibold">TAXTRO</span>
             </div>
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setIsMinimized(true)}
-                className="hover:bg-indigo-700 p-1 rounded"
+                className="hover:bg-green-700 p-1 rounded"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -320,13 +321,13 @@ Would you like me to start the registration process now?`,
                 <div
                   className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                     message.type === 'user'
-                      ? 'bg-indigo-600 text-white'
+                      ? 'bg-gradient-to-r from-green-400 to-green-600 text-white'
                       : 'bg-white text-gray-800 border border-gray-200'
                   }`}
                 >
                   <div className="whitespace-pre-line">{message.content}</div>
                   <div className={`text-xs mt-1 ${
-                    message.type === 'user' ? 'text-indigo-200' : 'text-gray-500'
+                    message.type === 'user' ? 'text-green-200' : 'text-gray-500'
                   }`}>
                     {message.timestamp.toLocaleTimeString()}
                   </div>
@@ -357,13 +358,13 @@ Would you like me to start the registration process now?`,
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Type your message..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black placeholder-gray-500"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black placeholder-gray-500"
                 disabled={isLoading}
               />
               <button
                 onClick={handleSendMessage}
                 disabled={!inputMessage.trim() || isLoading}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+                className="bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors duration-200"
               >
                 <Send className="w-4 h-4" />
               </button>

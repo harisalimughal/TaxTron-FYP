@@ -1,13 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Web3 from 'web3';
 import vehicleRegistryABI from '../contracts/contractABI.json';
 import vehicleNftABI from '../contracts/VehicleNFT.json';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { 
+  ArrowLeft, 
+  Car, 
+  Wallet, 
+  Download, 
+  Copy, 
+  ExternalLink, 
+  CheckCircle, 
+  Clock, 
+  AlertCircle,
+  Award,
+  Shield,
+  FileText,
+  Sparkles
+} from 'lucide-react';
 
 const NFTPage = () => {
   const { inspectionId } = useParams();
+  const navigate = useNavigate();
   const NFTPageRef = useRef(null);
   const certificateRef = useRef(null);
   
@@ -378,11 +394,13 @@ Registration: ${nftData.vehicleInfo?.registrationNumber}`;
   // Loading and error states
   if (!inspectionId) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="text-red-400 text-4xl mb-4">⚠️</div>
-          <h2 className="text-xl mb-4">Invalid URL</h2>
-          <p className="text-slate-400">No inspection ID provided in the URL</p>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center">
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 max-w-md w-full mx-4">
+          <div className="text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Invalid URL</h3>
+            <p className="text-gray-600">No inspection ID provided in the URL</p>
+          </div>
         </div>
       </div>
     );
@@ -390,11 +408,11 @@ Registration: ${nftData.vehicleInfo?.registrationNumber}`;
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-cyan-400 mx-auto"></div>
-          <p className="text-white mt-4 text-lg">Loading Vehicle Data...</p>
-          <p className="text-slate-400 text-sm mt-2">ID: {inspectionId}</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{borderColor: '#8CC152'}}></div>
+          <p className="text-gray-900 text-lg font-medium">Loading Vehicle Data...</p>
+          <p className="text-gray-600 text-sm mt-2">ID: {inspectionId}</p>
         </div>
       </div>
     );
@@ -402,17 +420,19 @@ Registration: ${nftData.vehicleInfo?.registrationNumber}`;
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-center max-w-md">
-          <div className="text-red-400 text-4xl mb-4">⚠️</div>
-          <h2 className="text-white text-xl mb-4">Error Loading NFT</h2>
-          <p className="text-slate-400 mb-6 text-sm">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg transition-all"
-          >
-            Retry
-          </button>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center">
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 max-w-md w-full mx-4">
+          <div className="text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading NFT</h3>
+            <p className="text-gray-600 mb-6 text-sm">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="bg-red-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -420,10 +440,13 @@ Registration: ${nftData.vehicleInfo?.registrationNumber}`;
 
   if (!vehicleData) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-center text-white">
-          <h2 className="text-xl">No vehicle data found</h2>
-          <p className="text-slate-400 mt-2">Inspection ID: {inspectionId}</p>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center">
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 max-w-md w-full mx-4">
+          <div className="text-center">
+            <AlertCircle className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Data Found</h3>
+            <p className="text-gray-600">No vehicle data found for inspection ID: {inspectionId}</p>
+          </div>
         </div>
       </div>
     );
@@ -432,272 +455,382 @@ Registration: ${nftData.vehicleInfo?.registrationNumber}`;
   const { vehicleDetails } = vehicleData;
 
   return (
-    <div ref={NFTPageRef} className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-6 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Status display showing NFT status only */}
-        <div className="mb-4 flex gap-2 justify-center">
-          {/* NFT Status */}
-          {nftGenerated ? (
-            <div className="bg-purple-600/20 text-purple-400 px-3 py-1 rounded-full text-xs font-semibold">
-              ✓ NFT Certificate Available
-            </div>
-          ) : (
-            <div className="bg-orange-600/20 text-orange-400 px-3 py-1 rounded-full text-xs font-semibold">
-              ⏳ NFT Ready to Generate
-            </div>
-          )}
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Vehicle Information Panel */}
-          <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-6 shadow-2xl border border-slate-600">
-            <h1 className="text-2xl font-bold text-white text-center mb-6">
-              Vehicle Information
-            </h1>
-            
-            {/* Vehicle Image */}
-            {vehicleData.vehicleImage && (
-              <div className="mb-6">
-                <img 
-                  src={vehicleData.vehicleImage} 
-                  alt="Vehicle" 
-                  className="w-full h-48 object-cover rounded-lg border border-slate-600"
-                />
-              </div>
-            )}
-
-            {/* Vehicle Details */}
-            <div className="space-y-4">
-              <div className="text-center mb-4">
-                <h2 className="text-xl font-semibold text-white">
-                  {vehicleDetails?.make} {vehicleDetails?.model}
-                </h2>
-                <p className="text-slate-400">{vehicleDetails?.manufacturingYear}</p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="bg-slate-700/50 p-3 rounded-lg">
-                  <p className="text-slate-400">Type</p>
-                  <p className="text-white font-semibold">{vehicleDetails?.vehicleType}</p>
-                </div>
-                <div className="bg-slate-700/50 p-3 rounded-lg">
-                  <p className="text-slate-400">Engine</p>
-                  <p className="text-white font-semibold text-xs">{vehicleDetails?.engineNumber}</p>
-                </div>
-                <div className="bg-slate-700/50 p-3 rounded-lg">
-                  <p className="text-slate-400">Chassis</p>
-                  <p className="text-white font-semibold text-xs">{vehicleDetails?.chassisNumber}</p>
-                </div>
-                <div className="bg-slate-700/50 p-3 rounded-lg">
-                  <p className="text-slate-400">Owner</p>
-                  <p className="text-white font-semibold text-xs">{vehicleDetails?.ownerName}</p>
-                </div>
-              </div>
-
-              {/* Registration Number */}
-              {vehicleData.registrationNumber && (
-                <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 p-4 rounded-lg border border-blue-500/30">
-                  <p className="text-slate-400 text-sm">Registration Number</p>
-                  <p className="text-white font-bold text-lg">
-                    {vehicleData.registrationNumber}
-                  </p>
-                </div>
-              )}
-
-              {/* Wallet Connection */}
-              {!walletAddress ? (
-                <button
-                  onClick={connectWallet}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center"
-                >
-                  🔗 Connect Wallet
-                </button>
-              ) : (
-                <div className="bg-slate-700/50 p-3 rounded-lg">
-                  <p className="text-slate-400">Connected Wallet</p>
-                  <p className="text-white font-mono text-xs">
-                    {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-                  </p>
-                </div>
-              )}
-
-              {/* Generate NFT Button - Always available when wallet is connected */}
-              {walletAddress && !nftGenerated && (
-                <button
-                  onClick={generateNFT}
-                  disabled={isGeneratingNFT}
-                  className="w-full bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center"
-                >
-                  {isGeneratingNFT ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Generating NFT...
-                    </>
-                  ) : (
-                    <>🎨 Generate NFT Certificate</>
-                  )}
-                </button>
-              )}
-
-              {/* View Certificate Button when NFT is generated */}
-              {walletAddress && nftGenerated && !showCertificate && (
-                <button
-                  onClick={() => setShowCertificate(true)}
-                  className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white py-3 px-4 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center"
-                >
-                  📋 View NFT Certificate
-                </button>
-              )}
+    <div ref={NFTPageRef} className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
+      <div className="p-6 lg:p-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={() => navigate(-1)}
+              className="flex items-center justify-center w-10 h-10 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Vehicle NFT Certificate</h1>
+              <p className="text-sm text-gray-600">Digital blockchain certificate for your vehicle</p>
             </div>
           </div>
+        </div>
 
-          {/* Certificate Display Panel */}
-          <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-6 shadow-2xl border border-slate-600">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">NFT Digital Certificate</h2>
-              {nftGenerated && (
-                <div className="flex gap-2">
+        <div className="max-w-6xl mx-auto">
+          {/* Status display showing NFT status only */}
+          <div className="mb-6 flex gap-2 justify-center">
+            {/* NFT Status */}
+            {nftGenerated ? (
+              <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4" />
+                <span>NFT Certificate Available</span>
+              </div>
+            ) : (
+              <div className="bg-orange-100 text-orange-800 px-4 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
+                <Clock className="w-4 h-4" />
+                <span>NFT Ready to Generate</span>
+              </div>
+            )}
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Vehicle Information Panel */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{backgroundColor: '#8CC152'}}>
+                  <Car className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Vehicle Information</h2>
+              </div>
+              
+              {/* Vehicle Image */}
+              {vehicleData.vehicleImage && (
+                <div className="mb-6">
+                  <img 
+                    src={vehicleData.vehicleImage} 
+                    alt="Vehicle" 
+                    className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                  />
+                </div>
+              )}
+
+              {/* Vehicle Details */}
+              <div className="space-y-4">
+                <div className="text-center mb-4">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {vehicleDetails?.make} {vehicleDetails?.model}
+                  </h3>
+                  <p className="text-gray-600">{vehicleDetails?.manufacturingYear}</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-gray-600 font-medium">Vehicle Type</p>
+                    <p className="text-gray-900 font-semibold">{vehicleDetails?.vehicleType || 'N/A'}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-gray-600 font-medium">Engine Capacity</p>
+                    <p className="text-gray-900 font-semibold">{vehicleDetails?.engineCapacity ? `${vehicleDetails.engineCapacity} CC` : 'N/A'}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-gray-600 font-medium">Engine Number</p>
+                    <p className="text-gray-900 font-semibold text-xs">{vehicleDetails?.engineNumber || 'N/A'}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-gray-600 font-medium">Chassis Number</p>
+                    <p className="text-gray-900 font-semibold text-xs">{vehicleDetails?.chassisNumber || 'N/A'}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-gray-600 font-medium">Color</p>
+                    <p className="text-gray-900 font-semibold">{vehicleDetails?.color || 'N/A'}</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-gray-600 font-medium">Fuel Type</p>
+                    <p className="text-gray-900 font-semibold">{vehicleDetails?.fuelType || 'N/A'}</p>
+                  </div>
+                </div>
+
+                {/* Owner Information Section */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                  <h4 className="font-semibold text-blue-900 mb-3 flex items-center space-x-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span>Owner Information</span>
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <div className="bg-white p-3 rounded-lg">
+                      <p className="text-gray-600 font-medium">Owner Name</p>
+                      <p className="text-gray-900 font-semibold">{vehicleData?.userId?.fullName || vehicleDetails?.ownerName || 'N/A'}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg">
+                      <p className="text-gray-600 font-medium">CNIC</p>
+                      <p className="text-gray-900 font-semibold">{vehicleData?.userId?.cnic || 'N/A'}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg">
+                      <p className="text-gray-600 font-medium">Email</p>
+                      <p className="text-gray-900 font-semibold text-xs">{vehicleData?.userId?.email || 'N/A'}</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg">
+                      <p className="text-gray-600 font-medium">Wallet Address</p>
+                      <p className="text-gray-900 font-semibold text-xs">{vehicleData?.userId?.walletAddress ? `${vehicleData.userId.walletAddress.slice(0, 6)}...${vehicleData.userId.walletAddress.slice(-4)}` : 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Registration Number */}
+                {vehicleData.registrationNumber && (
+                  <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
+                    <p className="text-green-700 text-sm font-medium">Registration Number</p>
+                    <p className="text-green-900 font-bold text-lg">
+                      {vehicleData.registrationNumber}
+                    </p>
+                  </div>
+                )}
+
+                {/* Wallet Connection */}
+                {!walletAddress ? (
                   <button
-                    onClick={copyNFTDetails}
-                    className="bg-slate-600 hover:bg-slate-700 text-white px-3 py-1 rounded text-sm transition-all"
-                    title="Copy NFT Details"
+                    onClick={connectWallet}
+                    className="w-full text-white py-3 px-4 rounded-lg font-semibold hover:opacity-90 transition-opacity flex items-center justify-center space-x-2"
+                    style={{backgroundColor: '#8CC152'}}
                   >
-                    📋
+                    <Wallet className="w-5 h-5" />
+                    <span>Connect Wallet</span>
                   </button>
+                ) : (
+                  <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <p className="text-green-700 font-medium">Connected Wallet</p>
+                    </div>
+                    <p className="text-green-900 font-mono text-xs mt-1">
+                      {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                    </p>
+                  </div>
+                )}
+
+                {/* Generate NFT Button - Always available when wallet is connected */}
+                {walletAddress && !nftGenerated && (
                   <button
-                    onClick={viewOnExplorer}
-                    className="bg-slate-600 hover:bg-slate-700 text-white px-3 py-1 rounded text-sm transition-all"
-                    title="View on Explorer"
+                    onClick={generateNFT}
+                    disabled={isGeneratingNFT}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
                   >
-                    🔍
-                  </button>
-                  <button
-                    onClick={downloadCertificateAsPDF}
-                    disabled={isDownloadingPDF}
-                    className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-1 rounded text-sm transition-all flex items-center"
-                    title="Download PDF"
-                  >
-                    {isDownloadingPDF ? (
+                    {isGeneratingNFT ? (
                       <>
-                        <div className="animate-spin rounded-full h-3 w-3 border-b border-white mr-1"></div>
-                        ⏳
+                        <Clock className="w-5 h-5 animate-spin" />
+                        <span>Generating NFT...</span>
                       </>
                     ) : (
-                      '🖨️'
+                      <>
+                        <Sparkles className="w-5 h-5" />
+                        <span>Generate NFT Certificate</span>
+                      </>
                     )}
                   </button>
+                )}
+
+                {/* View Certificate Button when NFT is generated */}
+                {walletAddress && nftGenerated && !showCertificate && (
+                  <button
+                    onClick={() => setShowCertificate(true)}
+                    className="w-full text-white py-3 px-4 rounded-lg font-semibold hover:opacity-90 transition-opacity flex items-center justify-center space-x-2"
+                    style={{backgroundColor: '#8CC152'}}
+                  >
+                    <FileText className="w-5 h-5" />
+                    <span>View NFT Certificate</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Certificate Display Panel */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{backgroundColor: '#8CC152'}}>
+                    <Award className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-900">NFT Digital Certificate</h2>
+                </div>
+                {nftGenerated && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={copyNFTDetails}
+                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm transition-colors flex items-center space-x-1"
+                      title="Copy NFT Details"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={viewOnExplorer}
+                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm transition-colors flex items-center space-x-1"
+                      title="View on Explorer"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={downloadCertificateAsPDF}
+                      disabled={isDownloadingPDF}
+                      className="text-white px-3 py-2 rounded-lg text-sm transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                      style={{backgroundColor: '#8CC152'}}
+                      title="Download PDF"
+                    >
+                      {isDownloadingPDF ? (
+                        <Clock className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {nftGenerated && showCertificate ? (
+                /* License Card Style Certificate */
+                <div 
+                  ref={certificateRef}
+                  id="certificate-card" 
+                  className="certificate-card bg-gradient-to-br from-green-600 via-emerald-600 to-green-800 rounded-2xl p-6 text-white shadow-2xl border-2 max-w-sm mx-auto"
+                  style={{borderColor: '#8CC152'}}
+                >
+                  {/* Header */}
+                  <div className="text-center mb-6">
+                    <div className="flex items-center justify-center space-x-2 mb-2">
+                      <Shield className="w-6 h-6" />
+                      <h3 className="text-lg font-bold">VEHICLE REGISTRATION</h3>
+                    </div>
+                    <p className="text-xs opacity-90">Digital Certificate</p>
+                    <div className="w-16 h-0.5 bg-white/50 mx-auto mt-2"></div>
+                  </div>
+
+                  {/* Vehicle Photo Section */}
+                  {vehicleData.vehicleImage && (
+                    <div className="text-center mb-4">
+                      <img 
+                        src={vehicleData.vehicleImage} 
+                        alt="Vehicle" 
+                        className="w-24 h-16 object-cover rounded-lg mx-auto border-2 border-white/30"
+                      />
+                    </div>
+                  )}
+
+                  {/* Vehicle Information */}
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="opacity-90">Vehicle:</span>
+                      <span className="font-semibold">{vehicleDetails?.make} {vehicleDetails?.model}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="opacity-90">Year:</span>
+                      <span className="font-semibold">{vehicleDetails?.manufacturingYear}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="opacity-90">Type:</span>
+                      <span className="font-semibold">{vehicleDetails?.vehicleType}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="opacity-90">Engine:</span>
+                      <span className="font-semibold">{vehicleDetails?.engineCapacity}cc</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="opacity-90">Chassis:</span>
+                      <span className="font-semibold text-xs">{vehicleDetails?.chassisNumber}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="opacity-90">Color:</span>
+                      <span className="font-semibold">{vehicleDetails?.color}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="opacity-90">Fuel:</span>
+                      <span className="font-semibold">{vehicleDetails?.fuelType}</span>
+                    </div>
+                    
+                    {/* Owner Information */}
+                    <div className="border-t border-white/30 pt-2 mt-3">
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-90">Owner:</span>
+                        <span className="font-semibold text-xs">{vehicleData?.userId?.fullName || vehicleDetails?.ownerName}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-90">CNIC:</span>
+                        <span className="font-semibold text-xs">{vehicleData?.userId?.cnic}</span>
+                      </div>
+                    </div>
+                    
+                    {vehicleData.registrationNumber && (
+                      <div className="bg-white/20 p-3 rounded-lg mt-4">
+                        <div className="text-center">
+                          <p className="text-xs opacity-90">Registration Number</p>
+                          <p className="font-bold text-lg tracking-wider">
+                            {vehicleData.registrationNumber}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* NFT Details */}
+                    {nftData?.exists && (
+                      <div className="border-t border-white/30 pt-3 mt-4">
+                        <div className="flex justify-between items-center">
+                          <span className="opacity-90">Token ID:</span>
+                          <span className="font-mono text-xs">{nftData.tokenId}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="opacity-90">Owner:</span>
+                          <span className="font-mono text-xs">{nftData.owner?.slice(0, 6)}...{nftData.owner?.slice(-4)}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="text-center mt-6 pt-4 border-t border-white/30">
+                    <div className="flex items-center justify-center space-x-2 mb-2">
+                      <CheckCircle className="w-4 h-4 text-green-300" />
+                      <p className="text-xs opacity-75">Blockchain Verified</p>
+                    </div>
+                    <p className="text-xs opacity-75">Inspection ID: {inspectionId}</p>
+                    <div className="flex justify-center items-center mt-2">
+                      <div className="w-2 h-2 bg-green-300 rounded-full mr-2"></div>
+                      <span className="text-xs">Authentic Certificate</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Placeholder when NFT not generated */
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                    <Award className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    NFT Certificate Ready
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    {!walletAddress 
+                      ? "Connect your wallet to generate your NFT certificate"
+                      : "Click 'Generate NFT Certificate' to create your digital certificate"
+                    }
+                  </p>
+                  
+                  {nftGenerated && !showCertificate && (
+                    <button
+                      onClick={() => setShowCertificate(true)}
+                      className="text-white py-2 px-6 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+                      style={{backgroundColor: '#8CC152'}}
+                    >
+                      View Certificate
+                    </button>
+                  )}
                 </div>
               )}
             </div>
-
-            {nftGenerated && showCertificate ? (
-              /* License Card Style Certificate */
-              <div 
-                ref={certificateRef}
-                id="certificate-card" 
-                className="certificate-card bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 rounded-2xl p-6 text-white shadow-2xl border border-blue-400/30 max-w-sm mx-auto"
-              >
-                {/* Header */}
-                <div className="text-center mb-6">
-                  <h3 className="text-lg font-bold">VEHICLE REGISTRATION</h3>
-                  <p className="text-xs opacity-90">Digital Certificate</p>
-                  <div className="w-16 h-0.5 bg-white/50 mx-auto mt-2"></div>
-                </div>
-
-                {/* Vehicle Photo Section */}
-                {vehicleData.vehicleImage && (
-                  <div className="text-center mb-4">
-                    <img 
-                      src={vehicleData.vehicleImage} 
-                      alt="Vehicle" 
-                      className="w-24 h-16 object-cover rounded-lg mx-auto border-2 border-white/30"
-                    />
-                  </div>
-                )}
-
-                {/* Vehicle Information */}
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="opacity-90">Vehicle:</span>
-                    <span className="font-semibold">{vehicleDetails?.make} {vehicleDetails?.model}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="opacity-90">Year:</span>
-                    <span className="font-semibold">{vehicleDetails?.manufacturingYear}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="opacity-90">Type:</span>
-                    <span className="font-semibold">{vehicleDetails?.vehicleType}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="opacity-90">Owner:</span>
-                    <span className="font-semibold text-xs">{vehicleDetails?.ownerName}</span>
-                  </div>
-                  
-                  {vehicleData.registrationNumber && (
-                    <div className="bg-white/20 p-3 rounded-lg mt-4">
-                      <div className="text-center">
-                        <p className="text-xs opacity-90">Registration Number</p>
-                        <p className="font-bold text-lg tracking-wider">
-                          {vehicleData.registrationNumber}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* NFT Details */}
-                  {nftData?.exists && (
-                    <div className="border-t border-white/30 pt-3 mt-4">
-                      <div className="flex justify-between items-center">
-                        <span className="opacity-90">Token ID:</span>
-                        <span className="font-mono text-xs">{nftData.tokenId}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="opacity-90">Owner:</span>
-                        <span className="font-mono text-xs">{nftData.owner?.slice(0, 6)}...{nftData.owner?.slice(-4)}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Footer */}
-                <div className="text-center mt-6 pt-4 border-t border-white/30">
-                  <p className="text-xs opacity-75">Blockchain Verified</p>
-                  <p className="text-xs opacity-75">Inspection ID: {inspectionId}</p>
-                  <div className="flex justify-center items-center mt-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                    <span className="text-xs">Authentic Certificate</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* Placeholder when NFT not generated */
-              <div className="text-center py-12">
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  NFT Certificate Ready
-                </h3>
-                <p className="text-slate-400 mb-6">
-                  {!walletAddress 
-                    ? "Connect your wallet to generate your NFT certificate"
-                    : "Click 'Generate NFT Certificate' to create your digital certificate"
-                  }
-                </p>
-                
-                {nftGenerated && !showCertificate && (
-                  <button
-                    onClick={() => setShowCertificate(true)}
-                
-                    className="bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-700 hover:to-purple-700 text-white py-2 px-6 rounded-lg font-semibold transition-all duration-200"
-                  >
-                    View Certificate
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>

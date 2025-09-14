@@ -1,776 +1,588 @@
-// import React, { useState, useEffect } from 'react';
-// import { useParams } from 'react-router-dom';
-// import { ethers } from 'ethers';
-// import './TaxPayment.css';
-
-// const TaxPayment = () => {
-//   const { inspectionId } = useParams();
-  
-//   const [vehicleData, setVehicleData] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [paymentLoading, setPaymentLoading] = useState(false);
-//   const [taxPaid, setTaxPaid] = useState(false);
-//   const [error, setError] = useState('');
-//   const [walletAddress, setWalletAddress] = useState('');
-//   const [taxAmount, setTaxAmount] = useState(0);
-//   const [transactionHash, setTransactionHash] = useState('');
-
-//   // Contract ABI (same as registration component)
-//   const CONTRACT_ABI = [
-//     "function getVehicle(string memory _inspectionId) external view returns (tuple(string inspectionId, string make, string model, uint256 year, string engineNumber, string chassisNumber, string vehicleType, uint256 engineCapacity, string registrationNumber, address vehicleOwner, uint256 registrationFee, bool registrationFeePaid, uint256 registrationTimestamp, uint256 taxAmount, bool taxPaid, uint256 taxPaidTimestamp, string registrationTxHash, string taxTxHash, bool isActive))",
-//     "function payTax(string memory _inspectionId, string memory _taxTxHash) external payable",
-//     "function getTaxAmount(string memory _inspectionId) external view returns (uint256)",
-//     "function getPaymentStatus(string memory _inspectionId) external view returns (bool registrationPaid, bool taxPaid, uint256 taxAmount)",
-//     "event TaxPaid(string indexed inspectionId, address indexed owner, uint256 taxAmount, uint256 timestamp)"
-//   ];
-
-//   const CONTRACT_ADDRESS = "0x1234567890123456789012345678901234567890"; // Replace with actual deployed address
-
-//   useEffect(() => {
-//     checkWalletConnection();
-//     fetchVehicleData();
-//   }, [inspectionId]);
-
-//   const checkWalletConnection = async () => {
-//     if (window.ethereum) {
-//       try {
-//         const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-//         if (accounts.length > 0) {
-//           setWalletAddress(accounts[0]);
-//           checkTaxStatus(accounts[0]);
-//         }
-//       } catch (error) {
-//         console.error('Error checking wallet connection:', error);
-//       }
-//     }
-//   };
-
-//   const connectWallet = async () => {
-//     if (window.ethereum) {
-//       try {
-//         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-//         setWalletAddress(accounts[0]);
-//         checkTaxStatus(accounts[0]);
-//       } catch (error) {
-//         setError('Failed to connect wallet');
-//       }
-//     } else {
-//       setError('MetaMask not installed');
-//     }
-//   };
-
-//   const fetchVehicleData = async () => {
-//     try {
-//       setLoading(true);
-      
-//       const response = await fetch(`http://localhost:5000/api/inspections/${inspectionId}`);
-//       const data = await response.json();
-      
-//       if (data.success) {
-//         setVehicleData(data.data);
-//       } else {
-//         setError(`Vehicle data not found: ${data.message}`);
-//       }
-//     } catch (error) {
-//       setError(`Failed to fetch vehicle data: ${error.message}`);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const checkTaxStatus = async (address) => {
-//     if (!address || !inspectionId) return;
-    
-//     try {
-//       const provider = new ethers.providers.Web3Provider(window.ethereum);
-//       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-      
-//       // Check vehicle registration and tax status
-//       const paymentStatus = await contract.getPaymentStatus(inspectionId);
-      
-//       if (!paymentStatus.registrationPaid) {
-//         setError('Vehicle must be registered before paying tax');
-//         return;
-//       }
-      
-//       setTaxPaid(paymentStatus.taxPaid);
-//       setTaxAmount(ethers.utils.formatUnits(paymentStatus.taxAmount, 'wei'));
-      
-//       if (paymentStatus.taxPaid) {
-//         // Get transaction hash from vehicle data
-//         const vehicleData = await contract.getVehicle(inspectionId);
-//         setTransactionHash(vehicleData.taxTxHash);
-//       }
-      
-//     } catch (error) {
-//       console.error('Error checking tax status:', error);
-//       setError('Failed to check tax status from blockchain');
-//     }
-//   };
-
-//   const calculateTaxAmount = (vehicleType, engineCapacity, year) => {
-//     // Tax calculation logic based on your requirements
-//     let baseTax = 0;
-    
-//     const currentYear = new Date().getFullYear();
-//     const vehicleAge = currentYear - year;
-    
-//     // Base tax by vehicle type
-//     const baseTaxRates = {
-//       'Car': 3000,
-//       'Motorcycle': 1000,
-//       'Truck': 5000,
-//       'Bus': 7000,
-//       'Van': 4000,
-//       'SUV': 4500,
-//       'Default': 2000
-//     };
-    
-//     baseTax = baseTaxRates[vehicleType] || baseTaxRates['Default'];
-    
-//     // Age-based adjustment
-//     if (vehicleAge > 10) {
-//       baseTax *= 0.8; // 20% reduction for old vehicles
-//     } else if (vehicleAge < 3) {
-//       baseTax *= 1.2; // 20% increase for new vehicles
-//     }
-    
-//     // Engine capacity adjustment
-//     if (vehicleType === 'Car' && engineCapacity > 2000) {
-//       baseTax += 1500;
-//     } else if (vehicleType === 'Motorcycle' && engineCapacity > 600) {
-//       baseTax += 500;
-//     }
-    
-//     return Math.floor(baseTax);
-//   };
-
-//   const handleTaxPayment = async () => {
-//     if (!walletAddress) {
-//       await connectWallet();
-//       return;
-//     }
-
-//     if (taxAmount === 0) {
-//       setError('Tax amount not set. Please contact administrator.');
-//       return;
-//     }
-
-//     try {
-//       setPaymentLoading(true);
-//       setError('');
-
-//       const provider = new ethers.providers.Web3Provider(window.ethereum);
-//       const signer = provider.getSigner();
-      
-//       // Convert tax amount to Wei (assuming tax is in PKR, convert to ETH)
-//       const taxInEth = ethers.utils.parseEther((taxAmount * 0.000001).toString());
-      
-//       // Create contract instance
-//       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-      
-//       // Pay tax
-//       const tx = await contract.payTax(
-//         inspectionId,
-//         "", // Transaction hash will be set after confirmation
-//         {
-//           value: taxInEth,
-//           gasLimit: 300000
-//         }
-//       );
-
-//       console.log('Tax payment transaction submitted:', tx.hash);
-      
-//       // Wait for transaction confirmation
-//       const receipt = await tx.wait();
-//       console.log('Tax payment confirmed:', receipt);
-
-//       // Update backend
-//       await updateTaxPaymentStatus(tx.hash);
-
-//       setTaxPaid(true);
-//       setTransactionHash(tx.hash);
-      
-//       alert('Tax payment successful!');
-      
-//     } catch (error) {
-//       console.error('Tax payment failed:', error);
-//       let errorMessage = 'Tax payment failed: ';
-      
-//       if (error.code === 4001) {
-//         errorMessage += 'Transaction rejected by user';
-//       } else if (error.message.includes('insufficient funds')) {
-//         errorMessage += 'Insufficient funds in wallet';
-//       } else if (error.message.includes('Tax already paid')) {
-//         errorMessage += 'Tax has already been paid for this vehicle';
-//       } else {
-//         errorMessage += error.message;
-//       }
-      
-//       setError(errorMessage);
-//     } finally {
-//       setPaymentLoading(false);
-//     }
-//   };
-
-//   const updateTaxPaymentStatus = async (txHash) => {
-//     try {
-//       await fetch(`http://localhost:5000/api/inspections/${inspectionId}/tax-payment`, {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify({
-//           taxPaid: true,
-//           taxTransactionHash: txHash,
-//           walletAddress: walletAddress,
-//           taxAmount: taxAmount
-//         })
-//       });
-//     } catch (error) {
-//       console.error('Failed to update tax payment status in backend:', error);
-//     }
-//   };
-
-//   const viewTransaction = () => {
-//     const explorerUrl = `https://etherscan.io/tx/${transactionHash}`;
-//     window.open(explorerUrl, '_blank');
-//   };
-
-//   if (loading) {
-//     return (
-//       <div className="tax-container">
-//         <div className="loading">Loading vehicle details...</div>
-//       </div>
-//     );
-//   }
-
-//   if (error) {
-//     return (
-//       <div className="tax-container">
-//         <div className="error">{error}</div>
-//       </div>
-//     );
-//   }
-
-//   if (!vehicleData) {
-//     return (
-//       <div className="tax-container">
-//         <div className="error">No vehicle data found</div>
-//       </div>
-//     );
-//   }
-
-//   const { vehicleDetails } = vehicleData;
-//   const calculatedTax = calculateTaxAmount(vehicleDetails.vehicleType, vehicleDetails.engineCapacity, vehicleDetails.year);
-
-//   return (
-//     <div className="tax-container">
-//       <div className="tax-card">
-//         <h2>Vehicle Tax Payment</h2>
-        
-//         {/* Vehicle Details */}
-//         <div className="vehicle-summary">
-//           <h3>Vehicle Information</h3>
-//           <div className="summary-item">
-//             <span>{vehicleDetails.make} {vehicleDetails.model} ({vehicleDetails.year})</span>
-//           </div>
-//           <div className="summary-item">
-//             <span>Registration: {vehicleData.registrationNumber}</span>
-//           </div>
-//           <div className="summary-item">
-//             <span>Type: {vehicleDetails.vehicleType}</span>
-//           </div>
-//         </div>
-
-//         {/* Tax Information */}
-//         <div className="tax-info">
-//           <h3>Tax Details</h3>
-//           <div className="tax-breakdown">
-//             <div className="tax-item">
-//               <span className="tax-label">Calculated Annual Tax:</span>
-//               <span className="tax-value">PKR {calculatedTax.toLocaleString()}</span>
-//             </div>
-//             {taxAmount > 0 && taxAmount !== calculatedTax && (
-//               <div className="tax-item">
-//                 <span className="tax-label">Official Tax Amount:</span>
-//                 <span className="tax-value">PKR {parseInt(taxAmount).toLocaleString()}</span>
-//               </div>
-//             )}
-//           </div>
-//         </div>
-
-//         {/* Wallet Connection */}
-//         {!walletAddress && (
-//           <div className="wallet-section">
-//             <button onClick={connectWallet} className="connect-wallet-btn">
-//               Connect MetaMask Wallet
-//             </button>
-//           </div>
-//         )}
-
-//         {walletAddress && (
-//           <div className="wallet-info">
-//             <p>Connected Wallet: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</p>
-//           </div>
-//         )}
-
-//         {/* Tax Payment Section */}
-//         {!taxPaid && walletAddress && taxAmount > 0 && (
-//           <div className="payment-section">
-//             <button 
-//               onClick={handleTaxPayment} 
-//               disabled={paymentLoading}
-//               className="pay-tax-btn"
-//             >
-//               {paymentLoading ? 'Processing Tax Payment...' : `Pay Tax (PKR ${parseInt(taxAmount).toLocaleString()})`}
-//             </button>
-//             <p className="payment-note">
-//               Tax amount will be deducted from your MetaMask wallet
-//             </p>
-//           </div>
-//         )}
-
-//         {/* Tax Amount Not Set */}
-//         {!taxPaid && taxAmount === 0 && (
-//           <div className="tax-not-set">
-//             <div className="info-icon">ℹ️</div>
-//             <h3>Tax Amount Not Set</h3>
-//             <p>The official tax amount has not been set by the authorities yet.</p>
-//             <p>Estimated tax: PKR {calculatedTax.toLocaleString()}</p>
-//             <p>Please check back later or contact the registration office.</p>
-//           </div>
-//         )}
-
-//         {/* Tax Payment Success */}
-//         {taxPaid && (
-//           <div className="payment-success">
-//             <div className="success-icon">✅</div>
-//             <h3>Tax Payment Successful!</h3>
-//             <p>Your vehicle tax has been paid and recorded on the blockchain.</p>
-//             {transactionHash && (
-//               <div className="transaction-info">
-//                 <p className="tx-hash">
-//                   Transaction: {transactionHash.slice(0, 10)}...{transactionHash.slice(-8)}
-//                 </p>
-//                 <button onClick={viewTransaction} className="view-tx-btn">
-//                   View on Block Explorer
-//                 </button>
-//               </div>
-//             )}
-//             <div className="tax-receipt">
-//               <h4>Tax Payment Receipt</h4>
-//               <div className="receipt-item">
-//                 <span>Vehicle: {vehicleDetails.make} {vehicleDetails.model}</span>
-//               </div>
-//               <div className="receipt-item">
-//                 <span>Registration: {vehicleData.registrationNumber}</span>
-//               </div>
-//               <div className="receipt-item">
-//                 <span>Tax Amount: PKR {parseInt(taxAmount).toLocaleString()}</span>
-//               </div>
-//               <div className="receipt-item">
-//                 <span>Payment Date: {new Date().toLocaleDateString()}</span>
-//               </div>
-//             </div>
-//           </div>
-//         )}
-
-//         {error && (
-//           <div className="error-message">
-//             {error}
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default TaxPayment;
-
-
-
-
-
-"use client"
-
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import Web3 from 'web3';
+import contractABIData from '../contracts/contractABI.json';
+import { 
+  ArrowLeft, 
+  Car, 
+  CreditCard, 
+  CheckCircle, 
+  AlertCircle, 
+  Clock, 
+  Wallet,
+  Calendar,
+  DollarSign,
+  ExternalLink
+} from 'lucide-react';
 
 const TaxPayment = () => {
-  const navigate = useNavigate()
-  const [account, setAccount] = useState("")
-  const [vehicles, setVehicles] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [payingTax, setPayingTax] = useState({})
-  const [selectedVehicle, setSelectedVehicle] = useState(null)
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const navigate = useNavigate();
+  const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [paymentLoading, setPaymentLoading] = useState({});
+  const [walletAddress, setWalletAddress] = useState('');
+  const [web3, setWeb3] = useState(null);
+  const [user, setUser] = useState(null);
 
-  // Mock data - replace with actual API call
+  // Use your actual deployed Vehicle Registration contract address
+  const CONTRACT_ADDRESS = "0x98e503A4364ACdfA19441f07e81F4FFd53Dab75B"; // Your deployed Vehicle Registration contract
+  const CONTRACT_ABI = contractABIData.abi || contractABIData;
+
   useEffect(() => {
-    const mockVehicles = [
-      {
-        id: "VEH001",
-        registrationNumber: "ABC-123",
-        make: "Toyota",
-        model: "Corolla",
-        year: 2020,
-        engineCapacity: "1300cc",
-        vehicleType: "Car",
-        taxStatus: "Due",
-        taxAmount: 7500,
-        dueDate: "2024-03-15",
-        lastPaidDate: "2023-03-10",
-        penaltyAmount: 750,
-        totalAmount: 8250,
-      },
-      {
-        id: "VEH002",
-        registrationNumber: "XYZ-456",
-        make: "Honda",
-        model: "Civic",
-        year: 2019,
-        engineCapacity: "1500cc",
-        vehicleType: "Car",
-        taxStatus: "Paid",
-        taxAmount: 8500,
-        dueDate: "2024-06-20",
-        lastPaidDate: "2024-01-15",
-        penaltyAmount: 0,
-        totalAmount: 8500,
-      },
-      {
-        id: "VEH003",
-        registrationNumber: "DEF-789",
-        make: "Suzuki",
-        model: "Mehran",
-        year: 2018,
-        engineCapacity: "800cc",
-        vehicleType: "Car",
-        taxStatus: "Due",
-        taxAmount: 4500,
-        dueDate: "2024-02-28",
-        lastPaidDate: "2023-02-20",
-        penaltyAmount: 900,
-        totalAmount: 5400,
-      },
-      {
-        id: "VEH004",
-        registrationNumber: "GHI-321",
-        make: "Honda",
-        model: "CD 70",
-        year: 2021,
-        engineCapacity: "70cc",
-        vehicleType: "Motorcycle",
-        taxStatus: "Paid",
-        taxAmount: 2000,
-        dueDate: "2024-08-10",
-        lastPaidDate: "2024-02-05",
-        penaltyAmount: 0,
-        totalAmount: 2000,
-      },
-    ]
+    const userData = localStorage.getItem('userData');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+    initializeWeb3();
+    fetchVehiclesForTax();
+    checkWalletConnection();
+  }, []);
 
-    setTimeout(() => {
-      setVehicles(mockVehicles)
-      setLoading(false)
-    }, 1000)
-  }, [])
+  const initializeWeb3 = async () => {
+    if (window.ethereum) {
+      const web3Instance = new Web3(window.ethereum);
+      setWeb3(web3Instance);
+    }
+  };
 
-  // Connect to MetaMask
+  const checkWalletConnection = async () => {
+    if (window.ethereum) {
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length > 0) {
+          setWalletAddress(accounts[0]);
+        }
+      } catch (error) {
+        console.error('Error checking wallet connection:', error);
+      }
+    }
+  };
+
   const connectWallet = async () => {
     if (window.ethereum) {
       try {
-        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" })
-        setAccount(accounts[0])
-        return accounts[0]
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        setWalletAddress(accounts[0]);
       } catch (error) {
-        console.error("Error connecting to MetaMask", error)
-        alert("Error connecting to MetaMask: " + error.message)
+        setError('Failed to connect wallet');
       }
     } else {
-      alert("Please install MetaMask to use this feature!")
+      setError('MetaMask not installed');
     }
-  }
+  };
 
-  const handlePayTax = (vehicle) => {
-    setSelectedVehicle(vehicle)
-    setShowPaymentModal(true)
-  }
-
-  const processPayment = async () => {
-    if (!account) {
-      const connectedAccount = await connectWallet()
-      if (!connectedAccount) {
-        alert("Please connect MetaMask first!")
-        return
+  // Pakistan Annual Vehicle Tax calculation
+  const calculateAnnualTax = (vehicleType, engineCapacity = 0, vehicleValue = 0, vehicleAge = 0) => {
+    let annualTax = 0;
+    
+    // Base annual tax rates for Pakistan (in PKR)
+    const baseTaxRates = {
+      'Sedan': 3000,
+      'Hatchback': 2500,
+      'SUV': 8000,
+      'MUV': 6000,
+      'Coupe': 4000,
+      'Van': 4000,
+      'Bus': 15000,
+      'Truck': 12000,
+      'Motorcycle': 800,
+      'Scooter': 500,
+      'Other': 1000,
+      'Car': 3000,
+      'Default': 2000
+    };
+    
+    annualTax = baseTaxRates[vehicleType] || baseTaxRates['Default'];
+    
+    // Engine capacity multiplier (Pakistan system)
+    if (vehicleType === 'Car' || vehicleType === 'Sedan' || vehicleType === 'Hatchback') {
+      if (engineCapacity <= 1000) {
+        annualTax *= 1.0;
+      } else if (engineCapacity <= 1600) {
+        annualTax *= 1.5;
+      } else if (engineCapacity <= 2000) {
+        annualTax *= 2.0;
+      } else if (engineCapacity <= 3000) {
+        annualTax *= 3.0;
+      } else {
+        annualTax *= 4.0;
+      }
+    } else if (vehicleType === 'Motorcycle' || vehicleType === 'Scooter') {
+      if (engineCapacity <= 125) {
+        annualTax *= 1.0;
+      } else if (engineCapacity <= 250) {
+        annualTax *= 1.5;
+      } else {
+        annualTax *= 2.0;
       }
     }
+    
+    // Vehicle age discount
+    if (vehicleAge > 10) {
+      annualTax *= 0.7;
+    } else if (vehicleAge > 5) {
+      annualTax *= 0.8;
+    }
+    
+    // Commercial vehicle surcharge
+    if (vehicleType === 'Bus' || vehicleType === 'Truck' || vehicleType === 'Van') {
+      annualTax *= 1.2;
+    }
+    
+    return Math.round(annualTax);
+  };
 
-    setPayingTax({ ...payingTax, [selectedVehicle.id]: true })
+  const fetchVehiclesForTax = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('userToken');
+      
+      // Use the same endpoint as Dashboard for consistency
+      const response = await axios.get('http://localhost:5000/api/vehicles/tax-payment', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        // Process vehicles and calculate annual tax
+        const vehiclesWithTax = response.data.data.map(vehicle => {
+          const currentYear = new Date().getFullYear();
+          const vehicleAge = currentYear - (vehicle.year || currentYear);
+          const annualTax = calculateAnnualTax(
+            vehicle.vehicleType,
+            vehicle.engineCapacity,
+            0, // Vehicle value - can be added later
+            vehicleAge
+          );
+          
+          return {
+            ...vehicle,
+            vehicleDetails: {
+              make: vehicle.make,
+              model: vehicle.model,
+              manufacturingYear: vehicle.year,
+              vehicleType: vehicle.vehicleType,
+              engineCapacity: vehicle.engineCapacity
+            },
+            annualTax: annualTax,
+            vehicleAge: vehicleAge,
+            taxDueDate: new Date(new Date().getFullYear() + 1, 0, 31), // January 31st next year
+            isPaidThisYear: vehicle.taxPaid || false
+          };
+        });
+        
+        setVehicles(vehiclesWithTax);
+      }
+    } catch (error) {
+      console.error('Error fetching vehicles for tax:', error);
+      setError('Failed to load vehicles for tax payment');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTaxPayment = async (vehicle) => {
+    if (!walletAddress) {
+      await connectWallet();
+      return;
+    }
+
+    if (!web3) {
+      setError('Web3 not initialized');
+      return;
+    }
 
     try {
-      // Simulate payment processing
-      console.log("Processing payment for vehicle:", selectedVehicle.registrationNumber)
-      console.log("Amount:", selectedVehicle.totalAmount)
-      console.log("Wallet:", account)
+      setPaymentLoading(prev => ({ ...prev, [vehicle.inspectionId]: true }));
+      setError('');
+      
+      // Create contract instance (using existing VehicleRegistry contract)
+      const contract = new web3.eth.Contract(CONTRACT_ABI, CONTRACT_ADDRESS);
+      
+      // First, check if vehicle is registered in the blockchain
+      try {
+        const vehicleExists = await contract.methods.getVehicle(vehicle.inspectionId).call();
+        console.log('Vehicle found in blockchain:', vehicleExists);
+      } catch (checkError) {
+        console.error('Vehicle not found in blockchain:', checkError);
+        setError(`Vehicle not registered in blockchain yet. Please ensure the registration fee has been paid and confirmed on the blockchain before paying tax.`);
+        return;
+      }
+      
+      // Check if tax is already paid
+      try {
+        const taxAlreadyPaid = await contract.methods.isTaxPaid(vehicle.inspectionId).call();
+        if (taxAlreadyPaid) {
+          setError('Tax has already been paid for this vehicle.');
+          return;
+        }
+      } catch (taxCheckError) {
+        console.log('Tax status check failed, proceeding with payment...');
+      }
+      
+      // Check if tax amount is set in contract (required for payment)
+      try {
+        const contractTaxAmount = await contract.methods.getTaxAmount(vehicle.inspectionId).call();
+        if (contractTaxAmount == 0) {
+          setError(`Tax amount not set by admin yet. Please contact the administrator to set the tax amount for this vehicle.
+          
+Calculated tax amount: PKR ${vehicle.annualTax.toLocaleString()}
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 3000))
+Admin can set this amount at: /admin/tax-management`);
+          return;
+        }
+        console.log('Tax amount set in contract:', contractTaxAmount);
+      } catch (taxAmountError) {
+        console.error('Failed to get tax amount from contract:', taxAmountError);
+        setError('Failed to verify tax amount in contract. Please try again.');
+        return;
+      }
+      
+      // Get the contract tax amount (this is what we need to pay)
+      const contractTaxAmount = await contract.methods.getTaxAmount(vehicle.inspectionId).call();
+      const taxInWei = web3.utils.toWei(contractTaxAmount.toString(), 'wei');
+      
+      console.log('Contract tax amount:', contractTaxAmount);
+      console.log('Tax amount in Wei:', taxInWei);
+      
+      // Generate transaction hash placeholder
+      const txHashPlaceholder = `TAX-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Estimate gas for tax payment
+      const gasEstimate = await contract.methods.payTax(
+        vehicle.inspectionId,
+        txHashPlaceholder
+      ).estimateGas({
+        from: walletAddress,
+        value: taxInWei
+      });
 
-      // Update vehicle status
-      setVehicles((prevVehicles) =>
-        prevVehicles.map((vehicle) =>
-          vehicle.id === selectedVehicle.id
-            ? {
-                ...vehicle,
-                taxStatus: "Paid",
-                lastPaidDate: new Date().toISOString().split("T")[0],
-                penaltyAmount: 0,
-                totalAmount: vehicle.taxAmount,
-              }
-            : vehicle,
-        ),
-      )
+      // Execute tax payment transaction
+      const tx = await contract.methods.payTax(
+        vehicle.inspectionId,
+        txHashPlaceholder
+      ).send({
+        from: walletAddress,
+        value: taxInWei,
+        gas: Math.floor(Number(gasEstimate) * 1.2)
+      });
 
-      alert(`Tax payment successful for ${selectedVehicle.registrationNumber}! Transaction completed.`)
-      setShowPaymentModal(false)
-      setSelectedVehicle(null)
+      console.log('Tax payment transaction confirmed:', tx);
+
+      // Update backend with tax payment status
+      await updateTaxPaymentStatus(vehicle.inspectionId, tx.transactionHash, vehicle.annualTax);
+
+      // Update local state
+      setVehicles(prev => prev.map(v => 
+        v.inspectionId === vehicle.inspectionId 
+          ? { ...v, isPaidThisYear: true, taxTransactionHash: tx.transactionHash }
+          : v
+      ));
+      
+      alert('Annual tax payment successful!');
+      
     } catch (error) {
-      console.error("Payment error:", error)
-      alert("Payment failed. Please try again.")
+      console.error('Tax payment failed:', error);
+      let errorMessage = 'Tax payment failed: ';
+      
+      if (error.code === 4001) {
+        errorMessage += 'Transaction rejected by user';
+      } else if (error.message && error.message.includes('insufficient funds')) {
+        errorMessage += 'Insufficient funds in wallet';
+      } else {
+        errorMessage += (error.message || 'Unknown error occurred');
+      }
+      
+      setError(errorMessage);
     } finally {
-      setPayingTax({ ...payingTax, [selectedVehicle.id]: false })
+      setPaymentLoading(prev => ({ ...prev, [vehicle.inspectionId]: false }));
     }
-  }
+  };
 
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case "paid":
-        return "text-green-400 bg-green-900/50 border-green-500"
-      case "due":
-        return "text-red-400 bg-red-900/50 border-red-500"
-      case "overdue":
-        return "text-orange-400 bg-orange-900/50 border-orange-500"
-      default:
-        return "text-gray-400 bg-gray-900/50 border-gray-500"
+  const updateTaxPaymentStatus = async (inspectionId, txHash, taxAmount) => {
+    try {
+      const token = localStorage.getItem('userToken');
+      await axios.post(`http://localhost:5000/api/vehicles/${inspectionId}/pay-tax`, {
+        transactionHash: txHash,
+        taxAmount: taxAmount
+      }, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+    } catch (error) {
+      console.error('Failed to update tax payment status:', error);
     }
-  }
+  };
 
-  const isOverdue = (dueDate) => {
-    return new Date(dueDate) < new Date()
-  }
+  const viewOnEtherscan = (txHash) => {
+    const explorerUrl = `https://etherscan.io/tx/${txHash}`;
+    window.open(explorerUrl, '_blank');
+  };
 
   if (loading) {
     return (
-      <div className="bg-gray-900 min-h-screen text-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-white">Loading your vehicles...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{borderColor: '#8CC152'}}></div>
+          <p className="text-gray-600">Loading vehicles for tax payment...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="bg-gray-900 min-h-screen text-white">
-      <div className="max-w-6xl mx-auto p-6">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
+      <div className="p-6 lg:p-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Vehicle Tax Payment</h2>
-          <div className="flex items-center">
-            <button
-              onClick={connectWallet}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition duration-200"
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={() => navigate(-1)}
+              className="flex items-center justify-center w-10 h-10 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
             >
-              {account ? `Connected: ${account.substring(0, 6)}...${account.substring(38)}` : "Connect Wallet"}
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
-            <button
-              className="ml-4 text-blue-400 hover:text-blue-300 transition duration-200"
-              onClick={() => navigate("/dashboard")}
-            >
-              &lt; Back to Dashboard
-            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Annual Vehicle Tax Payment</h1>
+              <p className="text-sm text-gray-600">Pay your annual vehicle tax as per Pakistan Excise system</p>
+            </div>
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-gray-800 rounded-md p-4 border-l-4 border-blue-500">
-            <div className="text-2xl font-bold text-white mb-1">{vehicles.length}</div>
-            <div className="text-gray-400 text-sm">Total Vehicles</div>
-          </div>
-          <div className="bg-gray-800 rounded-md p-4 border-l-4 border-green-500">
-            <div className="text-2xl font-bold text-green-400 mb-1">
-              {vehicles.filter((v) => v.taxStatus === "Paid").length}
-            </div>
-            <div className="text-gray-400 text-sm">Tax Paid</div>
-          </div>
-          <div className="bg-gray-800 rounded-md p-4 border-l-4 border-red-500">
-            <div className="text-2xl font-bold text-red-400 mb-1">
-              {vehicles.filter((v) => v.taxStatus === "Due").length}
-            </div>
-            <div className="text-gray-400 text-sm">Tax Due</div>
-          </div>
-          <div className="bg-gray-800 rounded-md p-4 border-l-4 border-yellow-500">
-            <div className="text-2xl font-bold text-yellow-400 mb-1">
-              PKR{" "}
-              {vehicles
-                .filter((v) => v.taxStatus === "Due")
-                .reduce((sum, v) => sum + v.totalAmount, 0)
-                .toLocaleString()}
-            </div>
-            <div className="text-gray-400 text-sm">Total Due</div>
-          </div>
-        </div>
-
-        {/* Vehicles List */}
-        <div className="space-y-4">
-          {vehicles.map((vehicle) => (
-            <div key={vehicle.id} className="bg-gray-800 rounded-md p-6 border-l-4 border-blue-500">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-4">
-                <div className="mb-4 lg:mb-0">
-                  <h3 className="text-xl font-semibold text-white mb-1">
-                    {vehicle.make} {vehicle.model} ({vehicle.year})
-                  </h3>
-                  <p className="text-gray-400">Registration: {vehicle.registrationNumber}</p>
-                  <p className="text-gray-400 text-sm">
-                    {vehicle.engineCapacity} • {vehicle.vehicleType}
-                  </p>
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <span
-                    className={`px-3 py-1 rounded-md text-sm font-medium border ${getStatusColor(vehicle.taxStatus)}`}
-                  >
-                    {vehicle.taxStatus}
-                    {vehicle.taxStatus === "Due" && isOverdue(vehicle.dueDate) && " (Overdue)"}
-                  </span>
+        <div className="max-w-6xl mx-auto">
+          {/* Tax Information Card */}
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-6">
+            <div className="flex items-start space-x-3">
+              <DollarSign className="w-6 h-6 text-blue-600 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-blue-900 mb-2">Pakistan Annual Vehicle Tax</h3>
+                <div className="text-blue-800 space-y-1 text-sm">
+                  <p>• <strong>Annual Payment:</strong> Vehicle tax is due every year by January 31st</p>
+                  <p>• <strong>Calculation:</strong> Based on engine capacity, vehicle type, and age</p>
+                  <p>• <strong>Blockchain Payment:</strong> Secure payment through MetaMask wallet</p>
+                  <p>• <strong>Penalties:</strong> Late payment may incur additional charges</p>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <div>
-                  <p className="text-sm text-gray-400">Tax Amount</p>
-                  <p className="text-white font-medium">PKR {vehicle.taxAmount.toLocaleString()}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-400">Due Date</p>
-                  <p className="text-white font-medium">{new Date(vehicle.dueDate).toLocaleDateString()}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-400">Last Paid</p>
-                  <p className="text-white font-medium">
-                    {vehicle.lastPaidDate ? new Date(vehicle.lastPaidDate).toLocaleDateString() : "Never"}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-400">
-                    {vehicle.penaltyAmount > 0 ? "Total (with penalty)" : "Total Amount"}
-                  </p>
-                  <p className="text-white font-medium">PKR {vehicle.totalAmount.toLocaleString()}</p>
-                  {vehicle.penaltyAmount > 0 && (
-                    <p className="text-red-400 text-xs">Penalty: PKR {vehicle.penaltyAmount.toLocaleString()}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                {vehicle.taxStatus === "Due" ? (
-                  <button
-                    onClick={() => handlePayTax(vehicle)}
-                    disabled={payingTax[vehicle.id]}
-                    className="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white px-6 py-2 rounded-md transition duration-200"
-                  >
-                    {payingTax[vehicle.id] ? "Processing..." : "Pay Tax"}
-                  </button>
-                ) : (
-                  <button className="bg-green-600 text-white px-6 py-2 rounded-md cursor-not-allowed">
-                    Tax Paid ✔️
-                  </button>
-                )}
-              </div>
             </div>
-          ))}
-        </div>
-
-        {vehicles.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <svg className="w-16 h-16 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V4H6z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold text-white mb-2">No vehicles found</h3>
-            <p className="text-gray-400">Register your vehicles to view tax information</p>
           </div>
-        )}
 
-        {/* Payment Modal */}
-        {showPaymentModal && selectedVehicle && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-              <h3 className="text-xl font-semibold text-white mb-4">Confirm Tax Payment</h3>
+          {/* Wallet Connection */}
+          {!walletAddress && (
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{backgroundColor: '#8CC152'}}>
+                  <Wallet className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Connect Your Wallet</h3>
+                <p className="text-gray-600 mb-6">Connect your MetaMask wallet to pay vehicle tax</p>
+                <button 
+                  onClick={connectWallet} 
+                  className="text-white px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+                  style={{backgroundColor: '#8CC152'}}
+                >
+                  Connect MetaMask Wallet
+                </button>
+              </div>
+            </div>
+          )}
 
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Vehicle:</span>
-                  <span className="text-white">{selectedVehicle.registrationNumber}</span>
+          {walletAddress && (
+            <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
+              <div className="flex items-center space-x-3">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <div>
+                  <p className="font-medium text-green-800">Wallet Connected</p>
+                  <p className="text-green-700 text-sm">Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</p>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Tax Amount:</span>
-                  <span className="text-white">PKR {selectedVehicle.taxAmount.toLocaleString()}</span>
-                </div>
-                {selectedVehicle.penaltyAmount > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Penalty:</span>
-                    <span className="text-red-400">PKR {selectedVehicle.penaltyAmount.toLocaleString()}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Vehicles List */}
+          {vehicles.length === 0 ? (
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+              <div className="text-center">
+                <Car className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Vehicles Found</h3>
+                <p className="text-gray-600">You don't have any approved vehicles that require tax payment.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {vehicles.map((vehicle) => {
+                const currentYear = new Date().getFullYear();
+                const isPaymentLoading = paymentLoading[vehicle.inspectionId];
+                
+                return (
+                  <div key={vehicle.inspectionId} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    {/* Vehicle Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{backgroundColor: '#8CC152'}}>
+                          <Car className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {vehicle.vehicleDetails.make} {vehicle.vehicleDetails.model}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Registration: {vehicle.registrationNumber || 'Pending'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Tax Status Badge */}
+                      <div className="flex items-center space-x-3">
+                        {vehicle.isPaidThisYear ? (
+                          <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
+                            <CheckCircle className="w-4 h-4" />
+                            <span>Tax Paid {currentYear}</span>
+                          </div>
+                        ) : (
+                          <div className="bg-red-100 text-red-800 px-4 py-2 rounded-full text-sm font-semibold flex items-center space-x-2">
+                            <AlertCircle className="w-4 h-4" />
+                            <span>Tax Due {currentYear}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Vehicle Details Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm font-medium text-gray-600">Vehicle Type</p>
+                        <p className="text-lg font-semibold text-gray-900">{vehicle.vehicleDetails.vehicleType}</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm font-medium text-gray-600">Engine Capacity</p>
+                        <p className="text-lg font-semibold text-gray-900">{vehicle.vehicleDetails.engineCapacity} CC</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <p className="text-sm font-medium text-gray-600">Vehicle Age</p>
+                        <p className="text-lg font-semibold text-gray-900">{vehicle.vehicleAge} years</p>
+                      </div>
+                    </div>
+
+                    {/* Tax Calculation */}
+                    <div className="bg-blue-50 rounded-lg p-4 mb-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-semibold text-blue-900 mb-2">Annual Tax Calculation ({currentYear})</h4>
+                          <div className="text-blue-800 text-sm space-y-1">
+                            <p>Base Tax: PKR {Math.round(vehicle.annualTax / (vehicle.vehicleAge > 10 ? 0.7 : vehicle.vehicleAge > 5 ? 0.8 : 1)).toLocaleString()}</p>
+                            {vehicle.vehicleAge > 5 && (
+                              <p>Age Discount: -{vehicle.vehicleAge > 10 ? '30%' : '20%'}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-blue-700 font-medium">Total Annual Tax</p>
+                          <p className="text-2xl font-bold text-blue-900">PKR {vehicle.annualTax.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Payment Section */}
+                    {!vehicle.isPaidThisYear ? (
+                      <div className="space-y-4">
+                        {/* Prerequisites Check */}
+                        {!vehicle.registrationFeePaid && (
+                          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                            <div className="flex items-start space-x-3">
+                              <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
+                              <div>
+                                <h4 className="font-medium text-amber-800">Registration Fee Required</h4>
+                                <p className="text-amber-700 text-sm">You must pay the registration fee first before paying annual tax.</p>
+                                <button
+                                  onClick={() => navigate(`/pay-fee/${vehicle.inspectionId}`)}
+                                  className="mt-2 text-amber-800 hover:text-amber-900 font-medium text-sm underline"
+                                >
+                                  Pay Registration Fee First →
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Calendar className="w-5 h-5 text-red-500" />
+                            <div>
+                              <p className="font-medium text-gray-900">Tax Due Date: January 31, {currentYear + 1}</p>
+                              <p className="text-sm text-gray-600">Pay before due date to avoid penalties</p>
+                            </div>
+                          </div>
+                          
+                          {walletAddress && vehicle.registrationFeePaid && (
+                            <button
+                              onClick={() => handleTaxPayment(vehicle)}
+                              disabled={isPaymentLoading}
+                              className="text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                              style={{backgroundColor: '#8CC152'}}
+                            >
+                              {isPaymentLoading ? (
+                                <>
+                                  <Clock className="w-5 h-5 animate-spin" />
+                                  <span>Processing...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <CreditCard className="w-5 h-5" />
+                                  <span>Pay Tax (PKR {vehicle.annualTax.toLocaleString()})</span>
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <CheckCircle className="w-6 h-6 text-green-600" />
+                            <div>
+                              <p className="font-semibold text-green-800">Tax Paid for {currentYear}</p>
+                              <p className="text-sm text-green-700">Amount: PKR {vehicle.annualTax.toLocaleString()}</p>
+                            </div>
+                          </div>
+                          
+                          {vehicle.taxTransactionHash && (
+                            <button
+                              onClick={() => viewOnEtherscan(vehicle.taxTransactionHash)}
+                              className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center space-x-1"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                              <span>View Transaction</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-                <div className="flex justify-between border-t border-gray-600 pt-3">
-                  <span className="text-white font-semibold">Total Amount:</span>
-                  <span className="text-white font-semibold">PKR {selectedVehicle.totalAmount.toLocaleString()}</span>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mt-6">
+              <div className="flex items-start space-x-3">
+                <AlertCircle className="w-6 h-6 text-red-600 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-red-800 mb-1">Error</h4>
+                  <p className="text-red-700">{error}</p>
                 </div>
               </div>
-
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => {
-                    setShowPaymentModal(false)
-                    setSelectedVehicle(null)
-                  }}
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={processPayment}
-                  disabled={payingTax[selectedVehicle.id]}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded-md transition duration-200"
-                >
-                  {payingTax[selectedVehicle.id] ? "Processing..." : "Pay Now"}
-                </button>
-              </div>
             </div>
-          </div>
-        )}
-
-        {/* Dashboard Link */}
-        <div className="mt-6 text-center">
-          <a href={"/dashboard"} className="inline-block text-sm text-blue-400 hover:underline">
-            Go to Dashboard →
-          </a>
+          )}
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default TaxPayment
+export default TaxPayment;

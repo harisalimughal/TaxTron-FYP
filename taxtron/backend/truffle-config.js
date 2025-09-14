@@ -8,7 +8,7 @@ module.exports = {
   },
   compilers: {
     solc: {
-      version: "0.8.17",  // Use a more compatible version
+      version: "0.8.20",  // Updated to match OpenZeppelin requirements
       settings: {
         optimizer: {
           enabled: true,

@@ -6,29 +6,66 @@ const inspectionSchema = new mongoose.Schema({
       required: true,
       unique: true
     },
-    walletAddress: {
-      type: String,
+    
+    // User Reference (instead of wallet address)
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
       required: true
     },
+    
+    // Vehicle Details (no owner info here - it's in User model)
     vehicleDetails: {
-      ownerName: String,
-      fatherName: String,
-      cnic: String,
       engineNumber: {
         type: String,
-        required: true
+        required: true,
+        unique: true // Prevent duplicate engine numbers
       },
       chassisNumber: {
         type: String,
+        required: true,
+        unique: true // Prevent duplicate chassis numbers
+      },
+      make: {
+        type: String,
         required: true
       },
-      make: String,
-      model: String,
+      model: {
+        type: String,
+        required: true
+      },
       variant: String,
-      manufacturingYear: Number,
-      registrationYear: Number,
-      vehicleType: String,
-      fuelType: String
+      manufacturingYear: {
+        type: Number,
+        required: true,
+        min: 1900,
+        max: new Date().getFullYear() + 1
+      },
+      registrationYear: {
+        type: Number,
+        required: true,
+        min: 1900,
+        max: new Date().getFullYear() + 1
+      },
+      vehicleType: {
+        type: String,
+        required: true,
+        enum: ['Car', 'Motorcycle', 'Truck', 'Bus', 'Van', 'SUV', 'Other']
+      },
+      fuelType: {
+        type: String,
+        required: true,
+        enum: ['Petrol', 'Diesel', 'CNG', 'Electric', 'Hybrid', 'Other']
+      },
+      engineCapacity: {
+        type: Number,
+        required: true,
+        min: 0
+      },
+      color: {
+        type: String,
+        required: true
+      }
     },
     appointmentDetails: {
       date: String,
@@ -98,6 +135,28 @@ const inspectionSchema = new mongoose.Schema({
     default: 0
   },
   totalFee: {
+    type: Number,
+    default: 0
+  },
+
+  // Tax payment specific fields
+  taxPaid: {
+    type: Boolean,
+    default: false
+  },
+  taxTransactionHash: {
+    type: String,
+    default: ''
+  },
+  taxPaymentDate: {
+    type: Date,
+    default: null
+  },
+  taxPayerWallet: {
+    type: String,
+    default: ''
+  },
+  taxAmount: {
     type: Number,
     default: 0
   },

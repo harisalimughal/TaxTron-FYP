@@ -50,9 +50,8 @@ export default function AdminInspect() {
   // Filter inspections based on search term
   const filteredInspections = inspections.filter(inspection => 
     inspection.inspectionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    inspection.walletAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (inspection.ownerDetails && inspection.ownerDetails.name && 
-     inspection.ownerDetails.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (inspection.userId?.walletAddress && inspection.userId.walletAddress.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (inspection.userId?.fullName && inspection.userId.fullName.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (inspection.ownerDetails && inspection.ownerDetails.cnic && 
      inspection.ownerDetails.cnic.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (inspection.vehicleDetails && inspection.vehicleDetails.make && 
@@ -156,13 +155,16 @@ export default function AdminInspect() {
                           {inspection.inspectionId.substring(0, 8)}...
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {inspection.vehicleDetails?.ownerName || 'N/A'}
+                          {inspection.userId?.fullName || 'N/A'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {inspection.vehicleDetails ? `${inspection.vehicleDetails.make} ${inspection.vehicleDetails.model}` : 'N/A'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {inspection.walletAddress.substring(0, 6)}...{inspection.walletAddress.substring(inspection.walletAddress.length - 4)}
+                          {inspection.userId?.walletAddress ? 
+                            `${inspection.userId.walletAddress.substring(0, 6)}...${inspection.userId.walletAddress.substring(inspection.userId.walletAddress.length - 4)}` : 
+                            'N/A'
+                          }
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(inspection.createdAt).toLocaleDateString()}
@@ -365,7 +367,10 @@ function InspectionDetailView({ inspection, onBack, onStatusUpdate }) {
       }
       
       // Update inspection status
-      const statusResponse = await fetch(`http://localhost:5000/api/inspections/${inspection.inspectionId}/status`, {
+      console.log('Updating inspection:', inspection);
+      console.log('Using inspection ID:', inspection._id);
+      
+      const statusResponse = await fetch(`http://localhost:5000/api/inspections/${inspection._id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -374,28 +379,17 @@ function InspectionDetailView({ inspection, onBack, onStatusUpdate }) {
           status,
           inspectionNotes: notes,
           registrationNumber: status === 'Approved' ? registrationNumber : undefined,
+          vehicleImage: imageUrl,
           inspectedBy: 'admin-user' // Replace with actual admin user ID or name
         })
       });
       
-      if (!statusResponse.ok) throw new Error('Failed to update inspection status');
+      console.log('Status response:', statusResponse.status);
       
-      // If image URL exists and status is approved, save the image URL
-      if (imageUrl && status === 'Approved') {
-        // Assuming there's an endpoint to save vehicle images
-        // This endpoint isn't in the provided code but would be needed
-        const imageResponse = await fetch(`http://localhost:5000/api/inspections/${inspection.inspectionId}/vehicle-image`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            imageUrl,
-            walletAddress: inspection.walletAddress
-          })
-        });
-        
-        if (!imageResponse.ok) throw new Error('Failed to save vehicle image');
+      if (!statusResponse.ok) {
+        const errorData = await statusResponse.json();
+        console.error('Error response:', errorData);
+        throw new Error(errorData.message || 'Failed to update inspection status');
       }
       
       setSuccess(`Inspection ${status.toLowerCase()} successfully`);
@@ -446,7 +440,7 @@ function InspectionDetailView({ inspection, onBack, onStatusUpdate }) {
               </div>
               <div>
                 <span className="text-blue-600 text-sm font-medium">Wallet Address:</span>
-                <p className="font-medium text-gray-800 break-all text-sm">{inspection.walletAddress}</p>
+                <p className="font-medium text-gray-800 break-all text-sm">{inspection.userId?.walletAddress || 'N/A'}</p>
               </div>
               <div>
                 <span className="text-blue-600 text-sm font-medium">Submission Date:</span>
@@ -483,15 +477,15 @@ function InspectionDetailView({ inspection, onBack, onStatusUpdate }) {
               <div className="space-y-3">
                 <div>
                   <span className="text-green-600 text-sm font-medium">Full Name:</span>
-                  <p className="font-medium text-gray-800">{inspection.vehicleDetails.ownerName || 'N/A'}</p>
+                  <p className="font-medium text-gray-800">{inspection.userId?.fullName || 'N/A'}</p>
                 </div>
                 <div>
                   <span className="text-green-600 text-sm font-medium">CNIC Number:</span>
-                  <p className="font-medium text-gray-800">{inspection.vehicleDetails.cnic || 'N/A'}</p>
+                  <p className="font-medium text-gray-800">{inspection.userId?.cnic || 'N/A'}</p>
                 </div>
                 <div>
-                  <span className="text-green-600 text-sm font-medium">Father's Name:</span>
-                  <p className="font-medium text-gray-800">{inspection.vehicleDetails.fatherName || 'N/A'}</p>
+                  <span className="text-green-600 text-sm font-medium">Email:</span>
+                  <p className="font-medium text-gray-800">{inspection.userId?.email || 'N/A'}</p>
                 </div>
               </div>
             ) : (
@@ -531,7 +525,19 @@ function InspectionDetailView({ inspection, onBack, onStatusUpdate }) {
                 </div>
                 <div>
                   <span className="text-purple-600 text-sm font-medium">Vehicle Type:</span>
-                  <p className="font-medium text-gray-800">{inspection.vehicleDetails.vehicleType ? `${inspection.vehicleDetails.engineCapacity} CC` : 'N/A'}</p>
+                  <p className="font-medium text-gray-800">{inspection.vehicleDetails.vehicleType || 'N/A'}</p>
+                </div>
+                <div>
+                  <span className="text-purple-600 text-sm font-medium">Engine Capacity:</span>
+                  <p className="font-medium text-gray-800">{inspection.vehicleDetails.engineCapacity ? `${inspection.vehicleDetails.engineCapacity} CC` : 'N/A'}</p>
+                </div>
+                <div>
+                  <span className="text-purple-600 text-sm font-medium">Color:</span>
+                  <p className="font-medium text-gray-800">{inspection.vehicleDetails.color || 'N/A'}</p>
+                </div>
+                <div>
+                  <span className="text-purple-600 text-sm font-medium">Variant:</span>
+                  <p className="font-medium text-gray-800">{inspection.vehicleDetails.variant || 'N/A'}</p>
                 </div>
               </div>
             ) : (
