@@ -313,7 +313,7 @@ router.post('/complete/:transferId', authenticateUser, async (req, res) => {
   }
 });
 
-// Get ownership history
+// Get ownership history by vehicle ID
 router.get('/history/:vehicleId', authenticateUser, async (req, res) => {
   try {
     const { vehicleId } = req.params;
@@ -328,17 +328,61 @@ router.get('/history/:vehicleId', authenticateUser, async (req, res) => {
       });
     }
 
+    // Get complete vehicle details
+    const vehicle = await Inspection.findOne({ inspectionId: vehicleId }).select('vehicleDetails');
+    
     res.json({
       success: true,
       history: {
         vehicleId: history.vehicleId,
         chassisNumber: history.chassisNumber,
+        vehicleDetails: vehicle?.vehicleDetails || null,
         ownershipHistory: history.ownershipHistory,
         totalTransfers: history.totalTransfers
       }
     });
   } catch (error) {
     console.error('Error fetching ownership history:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+// Search ownership history by chassis number (public endpoint)
+router.get('/search-history/:chassisNumber', async (req, res) => {
+  try {
+    const { chassisNumber } = req.params;
+
+    // Find ownership history by chassis number
+    const history = await OwnershipHistory.findOne({ chassisNumber: chassisNumber });
+    
+    if (!history) {
+      return res.status(404).json({
+        success: false,
+        message: 'No ownership history found for this chassis number'
+      });
+    }
+
+    // Get complete vehicle details
+    const vehicle = await Inspection.findOne({ 
+      'vehicleDetails.chassisNumber': chassisNumber,
+      status: 'Approved'
+    }).select('vehicleDetails');
+
+    res.json({
+      success: true,
+      history: {
+        vehicleId: history.vehicleId,
+        chassisNumber: history.chassisNumber,
+        vehicleDetails: vehicle?.vehicleDetails || null,
+        ownershipHistory: history.ownershipHistory,
+        totalTransfers: history.totalTransfers
+      }
+    });
+  } catch (error) {
+    console.error('Error searching ownership history:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -356,9 +400,58 @@ router.get('/my-transfers', authenticateUser, async (req, res) => {
       ]
     }).sort({ createdAt: -1 });
 
+    // Populate vehicle details for each transfer
+    const transfersWithVehicleDetails = await Promise.all(
+      transfers.map(async (transfer) => {
+        try {
+          // Find the vehicle details from the Inspection model
+          const vehicle = await Inspection.findOne({ 
+            'vehicleDetails.chassisNumber': transfer.chassisNumber,
+            status: 'Approved'
+          }).select('vehicleDetails');
+
+          const transferObj = transfer.toObject();
+          if (vehicle && vehicle.vehicleDetails) {
+            transferObj.vehicle = {
+              make: vehicle.vehicleDetails.make,
+              model: vehicle.vehicleDetails.model,
+              year: vehicle.vehicleDetails.year,
+              chassisNumber: vehicle.vehicleDetails.chassisNumber,
+              engineNumber: vehicle.vehicleDetails.engineNumber,
+              color: vehicle.vehicleDetails.color
+            };
+          } else {
+            // Fallback data if vehicle not found
+            transferObj.vehicle = {
+              make: 'Unknown',
+              model: 'Unknown',
+              year: 'Unknown',
+              chassisNumber: transfer.chassisNumber,
+              engineNumber: 'Unknown',
+              color: 'Unknown'
+            };
+          }
+          return transferObj;
+        } catch (error) {
+          console.error('Error populating vehicle details for transfer:', transfer.transferId, error);
+          // Return transfer with fallback vehicle data
+          const transferObj = transfer.toObject();
+          transferObj.vehicle = {
+            make: 'Unknown',
+            model: 'Unknown',
+            year: 'Unknown',
+            chassisNumber: transfer.chassisNumber,
+            engineNumber: 'Unknown',
+            color: 'Unknown'
+          };
+          return transferObj;
+        }
+      })
+    );
+
     res.json({
       success: true,
-      transfers: transfers
+      transfers: transfersWithVehicleDetails
     });
   } catch (error) {
     console.error('Error fetching user transfers:', error);
