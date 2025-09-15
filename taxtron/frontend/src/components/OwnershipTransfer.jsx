@@ -1,612 +1,736 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  ArrowLeft, 
+  Search, 
+  Car, 
+  User, 
+  CheckCircle, 
+  AlertCircle, 
+  Clock, 
+  FileText,
+  Shield,
+  CreditCard,
+  ExternalLink,
+  Copy,
+  Download
+} from 'lucide-react';
+import axios from 'axios';
 
 const OwnershipTransfer = () => {
-  const navigate = useNavigate()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [transferId, setTransferId] = useState("")
-  const [transferSuccess, setTransferSuccess] = useState(false)
-  const [account, setAccount] = useState("")
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const [transferData, setTransferData] = useState({
-    // Current Owner Details
-    currentOwnerName: "",
-    currentOwnerCnic: "",
-    currentOwnerAddress: "",
+  // Form states
+  const [chassisNumber, setChassisNumber] = useState('');
+  const [recipientCnic, setRecipientCnic] = useState('');
 
-    // New Owner Details
-    newOwnerName: "",
-    newOwnerCnic: "",
-    newOwnerAddress: "",
-    newOwnerPhone: "",
-
-    // Vehicle Details
-    registrationNumber: "",
-    engineNumber: "",
-    chassisNumber: "",
-    make: "",
-    model: "",
-    year: "",
-
-    // Transfer Details
-    transferType: "",
-    transferReason: "",
-    salePrice: "",
-    transferDate: "",
-
-    // Documents
-    hasNOC: false,
-    hasClearance: false,
-    hasInsurance: false,
-    hasTransferCertificate: false,
-  })
-
-  // Generate a unique transfer ID when component mounts
-  useEffect(() => {
-    const uniqueId = `TRF-${Date.now()}-${Math.floor(Math.random() * 10000)}`
-    setTransferId(uniqueId)
-  }, [])
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
-
-    if (name === "currentOwnerCnic" || name === "newOwnerCnic") {
-      // Allow only numbers and limit to exactly 13 digits
-      if (!/^\d*$/.test(value)) return
-      if (value.length > 13) return
-    } else if (name === "currentOwnerName" || name === "newOwnerName") {
-      // Allow only alphabets and spaces
-      if (!/^[a-zA-Z\s]*$/.test(value)) return
-    } else if (name === "newOwnerPhone") {
-      // Allow only numbers and limit to 11 digits
-      if (!/^\d*$/.test(value)) return
-      if (value.length > 11) return
-    } else if (name === "salePrice") {
-      // Allow only numbers
-      if (!/^\d*$/.test(value)) return
-    }
-
-    setTransferData({
-      ...transferData,
-      [name]: type === "checkbox" ? checked : value,
-    })
-  }
-
-  // Connect to MetaMask
-  const connectWallet = async () => {
-    if (window.ethereum) {
-      try {
-        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" })
-        setAccount(accounts[0])
-        return accounts[0]
-      } catch (error) {
-        console.error("Error connecting to MetaMask", error)
-        alert("Error connecting to MetaMask: " + error.message)
-      }
+  // Format CNIC with dashes as user types
+  const formatCnic = (value) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+    
+    // Limit to 13 digits
+    const limitedDigits = digits.slice(0, 13);
+    
+    // Add dashes at appropriate positions
+    if (limitedDigits.length <= 5) {
+      return limitedDigits;
+    } else if (limitedDigits.length <= 12) {
+      return `${limitedDigits.slice(0, 5)}-${limitedDigits.slice(5)}`;
     } else {
-      alert("Please install MetaMask to use this feature!")
+      return `${limitedDigits.slice(0, 5)}-${limitedDigits.slice(5, 12)}-${limitedDigits.slice(12)}`;
     }
-  }
+  };
 
-  const submitTransferRequest = async () => {
-    let currentAccount = account
+  const handleCnicChange = (e) => {
+    const formatted = formatCnic(e.target.value);
+    setRecipientCnic(formatted);
+  };
+  const [transferFee, setTransferFee] = useState(5000);
 
-    if (!currentAccount) {
-      currentAccount = await connectWallet()
-      if (!currentAccount) {
-        alert("Please connect MetaMask first!")
-        return
+  // Data states
+  const [vehicleData, setVehicleData] = useState(null);
+  const [recipientData, setRecipientData] = useState(null);
+  const [transferData, setTransferData] = useState(null);
+
+  // Wallet states
+  const [walletAddress, setWalletAddress] = useState('');
+  const [isWalletConnected, setIsWalletConnected] = useState(false);
+
+  useEffect(() => {
+    // Check if wallet is connected
+    if (window.ethereum) {
+      checkWalletConnection();
+    }
+  }, []);
+
+  const checkWalletConnection = async () => {
+    try {
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+      if (accounts.length > 0) {
+        setWalletAddress(accounts[0]);
+        setIsWalletConnected(true);
       }
+    } catch (error) {
+      console.error('Error checking wallet connection:', error);
+    }
+  };
+
+  const connectWallet = async () => {
+    try {
+      if (!window.ethereum) {
+        setError('MetaMask is not installed. Please install MetaMask to continue.');
+        return;
+      }
+
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      setWalletAddress(accounts[0]);
+      setIsWalletConnected(true);
+      setError('');
+    } catch (error) {
+      console.error('Error connecting wallet:', error);
+      setError('Failed to connect wallet. Please try again.');
+    }
+  };
+
+  const searchVehicle = async () => {
+    if (!chassisNumber.trim()) {
+      setError('Please enter chassis number');
+      return;
     }
 
-    // Validate CNIC lengths
-    if (transferData.currentOwnerCnic.length !== 13) {
-      alert("Current owner CNIC must be exactly 13 digits!")
-      return
+    const token = localStorage.getItem('userToken');
+    if (!token) {
+      setError('Please log in to search for vehicles');
+      return;
     }
 
-    if (transferData.newOwnerCnic.length !== 13) {
-      alert("New owner CNIC must be exactly 13 digits!")
-      return
-    }
-
-    // Validate phone number
-    if (transferData.newOwnerPhone.length !== 11) {
-      alert("Phone number must be exactly 11 digits!")
-      return
-    }
-
-    // Check required documents
-    const requiredDocs = [
-      transferData.hasNOC,
-      transferData.hasClearance,
-      transferData.hasInsurance,
-      transferData.hasTransferCertificate,
-    ]
-
-    if (!requiredDocs.every((doc) => doc)) {
-      alert("Please confirm that you have all required documents!")
-      return
-    }
-
-    setIsSubmitting(true)
+    setLoading(true);
+    setError('');
 
     try {
-      // Prepare the transfer data
-      const transferRequestData = {
-        transferId: transferId,
-        walletAddress: currentAccount,
-        currentOwner: {
-          name: transferData.currentOwnerName,
-          cnic: transferData.currentOwnerCnic,
-          address: transferData.currentOwnerAddress,
-        },
-        newOwner: {
-          name: transferData.newOwnerName,
-          cnic: transferData.newOwnerCnic,
-          address: transferData.newOwnerAddress,
-          phone: transferData.newOwnerPhone,
-        },
-        vehicleDetails: {
-          registrationNumber: transferData.registrationNumber,
-          engineNumber: transferData.engineNumber,
-          chassisNumber: transferData.chassisNumber,
-          make: transferData.make,
-          model: transferData.model,
-          year: Number.parseInt(transferData.year) || 0,
-        },
-        transferDetails: {
-          type: transferData.transferType,
-          reason: transferData.transferReason,
-          salePrice: transferData.salePrice ? Number.parseInt(transferData.salePrice) : 0,
-          transferDate: transferData.transferDate,
-        },
-        documents: {
-          noc: transferData.hasNOC,
-          clearance: transferData.hasClearance,
-          insurance: transferData.hasInsurance,
-          transferCertificate: transferData.hasTransferCertificate,
-        },
+      const response = await axios.get(`/api/ownership-transfer/search-vehicle/${chassisNumber}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        setVehicleData(response.data.vehicle);
+        setCurrentStep(2);
+        setSuccess('Vehicle found successfully!');
+      } else {
+        setError(response.data.message);
       }
-
-      // Simulate API call - replace with actual endpoint
-      console.log("Transfer request submitted:", transferRequestData)
-
-      // Simulate processing time
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      setTransferSuccess(true)
-
-      alert(
-        `Ownership transfer request submitted successfully! Your transfer ID is ${transferId}. Please save this ID for reference. The transfer will be processed within 5-7 business days.`,
-      )
     } catch (error) {
-      console.error("Error submitting transfer request:", error)
-      alert("Error submitting transfer request: " + error.message)
+      console.error('Error searching vehicle:', error);
+      setError(error.response?.data?.message || 'Failed to search vehicle');
     } finally {
-      setIsSubmitting(false)
+      setLoading(false);
     }
-  }
+  };
 
-  // Generate year options for dropdown
-  const generateYearOptions = () => {
-    const currentYear = new Date().getFullYear()
-    const years = []
-    for (let year = currentYear; year >= 1950; year--) {
-      years.push(year)
+  const searchRecipient = async () => {
+    if (!recipientCnic.trim()) {
+      setError('Please enter recipient CNIC');
+      return;
     }
-    return years
-  }
 
-  const yearOptions = generateYearOptions()
+    setLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('userToken');
+      const response = await axios.get(`/api/ownership-transfer/search-user/${recipientCnic}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        setRecipientData(response.data.user);
+        setCurrentStep(3);
+        setSuccess('Recipient found successfully!');
+      } else {
+        setError(response.data.message);
+      }
+    } catch (error) {
+      console.error('Error searching recipient:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to search recipient';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const initiateTransfer = async () => {
+    if (!vehicleData || !recipientData) {
+      setError('Missing vehicle or recipient data');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('userToken');
+      const response = await axios.post('/api/ownership-transfer/initiate', {
+        vehicleId: vehicleData.inspectionId,
+        recipientCnic: recipientData.cnic,
+        transferFee: transferFee
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        setTransferData(response.data.transfer);
+        setCurrentStep(4);
+        setSuccess('Transfer initiated successfully!');
+      } else {
+        setError(response.data.message);
+      }
+    } catch (error) {
+      console.error('Error initiating transfer:', error);
+      setError(error.response?.data?.message || 'Failed to initiate transfer');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const completeTransfer = async () => {
+    if (!transferData) {
+      setError('No transfer data available');
+      return;
+    }
+
+    if (!isWalletConnected) {
+      setError('Please connect your wallet first');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // Here you would integrate with blockchain for actual transfer
+      // For now, we'll simulate the completion
+      const token = localStorage.getItem('userToken');
+      const response = await axios.post(`/api/ownership-transfer/complete/${transferData.transferId}`, {
+        blockchainTxHash: '0x' + Math.random().toString(16).substr(2, 64), // Simulated hash
+        transferDeed: 'simulated_transfer_deed_data'
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        setCurrentStep(5);
+        setSuccess('Transfer completed successfully!');
+      } else {
+        setError(response.data.message);
+      }
+    } catch (error) {
+      console.error('Error completing transfer:', error);
+      setError(error.response?.data?.message || 'Failed to complete transfer');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setCurrentStep(1);
+    setChassisNumber('');
+    setRecipientCnic('');
+    setVehicleData(null);
+    setRecipientData(null);
+    setTransferData(null);
+    setError('');
+    setSuccess('');
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    setSuccess('Copied to clipboard!');
+  };
 
   return (
-    <div className="bg-gray-900 min-h-screen text-white">
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Vehicle Ownership Transfer</h2>
-          <div className="flex items-center">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
             <button
-              onClick={connectWallet}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition duration-200"
+                onClick={() => navigate('/dashboard')}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              {account ? `Connected: ${account.substring(0, 6)}...${account.substring(38)}` : "Connect Wallet"}
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Vehicle Ownership Transfer</h1>
+                <p className="text-sm text-gray-600">Transfer vehicle ownership to another user</p>
+              </div>
+            </div>
+            
+            {/* Wallet Connection */}
+            <div className="flex items-center space-x-3">
+              {isWalletConnected ? (
+                <div className="flex items-center space-x-2 px-3 py-2 bg-green-100 text-green-800 rounded-lg">
+                  <Shield className="w-4 h-4" />
+                  <span className="text-sm font-medium">
+                    {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                  </span>
+                </div>
+              ) : (
             <button
-              className="ml-4 text-blue-400 hover:text-blue-300 transition duration-200"
-              onClick={() => navigate("/dashboard")}
+                  onClick={connectWallet}
+                  className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
-              &lt; Back to Dashboard
+                  <Shield className="w-4 h-4" />
+                  <span>Connect Wallet</span>
             </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Progress Steps */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            {[1, 2, 3, 4, 5].map((step) => (
+              <div key={step} className="flex items-center">
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
+                  currentStep >= step 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-gray-200 text-gray-600'
+                }`}>
+                  {step}
+                </div>
+                {step < 5 && (
+                  <div className={`w-16 h-0.5 mx-2 ${
+                    currentStep > step ? 'bg-green-600' : 'bg-gray-200'
+                  }`} />
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between mt-2 text-xs text-gray-600">
+            <span>Search Vehicle</span>
+            <span>Find Recipient</span>
+            <span>Confirm Details</span>
+            <span>Complete Transfer</span>
+            <span>Success</span>
           </div>
         </div>
 
-        {transferId && (
-          <div className="mb-6 bg-blue-900/30 border border-blue-600 rounded-md p-3">
-            <p className="text-blue-300 font-medium">
-              Your Transfer ID: <span className="text-white font-bold">{transferId}</span>
-            </p>
-            <p className="text-sm text-gray-300 mt-1">
-              Please save this ID for future reference. You'll need it to track your transfer status.
-            </p>
+
+        {/* Step 1: Search Vehicle */}
+        {currentStep === 1 && (
+          <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="text-center mb-6">
+              <Car className="w-12 h-12 text-green-600 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Search Your Vehicle</h2>
+              <p className="text-gray-600">Enter the chassis number of the vehicle you want to transfer</p>
+            </div>
+
+            <div className="max-w-md mx-auto">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Chassis Number
+                  </label>
+                  <input
+                    type="text"
+                    value={chassisNumber}
+                    onChange={(e) => setChassisNumber(e.target.value)}
+                    placeholder="Enter chassis number (e.g., ABC123456789)"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  />
+                </div>
+
+                <button
+                  onClick={searchVehicle}
+                  disabled={loading || !chassisNumber.trim()}
+                  className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {loading ? (
+                    <Clock className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Search className="w-5 h-5" />
+                  )}
+                  <span>{loading ? 'Searching...' : 'Search Vehicle'}</span>
+                </button>
+
+                {/* Error/Success Messages for Vehicle Search */}
+                {error && (
+                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                    <span className="text-red-800 text-sm">{error}</span>
+                  </div>
+                )}
+
+                {success && (
+                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span className="text-green-800 text-sm">{success}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Current Owner & Vehicle Details */}
+        {/* Step 2: Vehicle Details & Search Recipient */}
+        {currentStep === 2 && vehicleData && (
           <div className="space-y-6">
-            {/* Current Owner Information */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Current Owner Information</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Current Owner Name *</label>
-                  <input
-                    type="text"
-                    name="currentOwnerName"
-                    value={transferData.currentOwnerName}
-                    onChange={handleChange}
-                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white"
-                    required
-                  />
+            {/* Vehicle Details */}
+            <div className="bg-white rounded-xl shadow-sm border p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+                <Car className="w-5 h-5 text-green-600" />
+                <span>Vehicle Details</span>
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Make & Model:</span>
+                    <span className="font-medium">{vehicleData.make} {vehicleData.model}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Year:</span>
+                    <span className="font-medium">{vehicleData.year}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Type:</span>
+                    <span className="font-medium">{vehicleData.vehicleType}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Chassis:</span>
+                    <span className="font-medium text-xs">{vehicleData.chassisNumber}</span>
+                  </div>
                 </div>
-
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Current Owner CNIC (13 digits) *</label>
-                  <input
-                    type="text"
-                    name="currentOwnerCnic"
-                    value={transferData.currentOwnerCnic}
-                    onChange={handleChange}
-                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white"
-                    placeholder="1234567890123"
-                    maxLength="13"
-                    required
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {transferData.currentOwnerCnic.length}/13 digits
-                    {transferData.currentOwnerCnic.length > 0 && transferData.currentOwnerCnic.length !== 13 && (
-                      <span className="text-red-400 ml-2">Must be exactly 13 digits</span>
-                    )}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Current Owner Address *</label>
-                  <textarea
-                    name="currentOwnerAddress"
-                    value={transferData.currentOwnerAddress}
-                    onChange={handleChange}
-                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white resize-none"
-                    rows="3"
-                    required
-                  />
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Engine:</span>
+                    <span className="font-medium">{vehicleData.engineCapacity} CC</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Color:</span>
+                    <span className="font-medium">{vehicleData.color}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Registration:</span>
+                    <span className="font-medium">{vehicleData.registrationNumber}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Current Owner:</span>
+                    <span className="font-medium">{vehicleData.currentOwner.name}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Vehicle Information */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Vehicle Information</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Registration Number *</label>
-                  <input
-                    type="text"
-                    name="registrationNumber"
-                    value={transferData.registrationNumber}
-                    onChange={handleChange}
-                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white"
-                    required
-                  />
+            {/* Search Recipient */}
+            <div className="bg-white rounded-xl shadow-sm border p-6">
+              <div className="text-center mb-6">
+                <User className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Find Recipient</h2>
+                <p className="text-gray-600">Enter the CNIC of the person you want to transfer the vehicle to</p>
                 </div>
 
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Engine Number *</label>
-                  <input
-                    type="text"
-                    name="engineNumber"
-                    value={transferData.engineNumber}
-                    onChange={handleChange}
-                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Chassis Number *</label>
-                  <input
-                    type="text"
-                    name="chassisNumber"
-                    value={transferData.chassisNumber}
-                    onChange={handleChange}
-                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="max-w-md mx-auto">
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-1">Make *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Recipient CNIC
+                    </label>
                     <input
                       type="text"
-                      name="make"
-                      value={transferData.make}
-                      onChange={handleChange}
-                      className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white"
-                      required
+                      value={recipientCnic}
+                      onChange={handleCnicChange}
+                      placeholder="Enter CNIC (e.g., 12345-1234567-1)"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-1">Model *</label>
-                    <input
-                      type="text"
-                      name="model"
-                      value={transferData.model}
-                      onChange={handleChange}
-                      className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white"
-                      required
-                    />
-                  </div>
-                </div>
+                  <button
+                    onClick={searchRecipient}
+                    disabled={loading || !recipientCnic.trim()}
+                    className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {loading ? (
+                      <Clock className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Search className="w-5 h-5" />
+                    )}
+                    <span>{loading ? 'Searching...' : 'Search Recipient'}</span>
+                  </button>
 
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Year *</label>
-                  <div className="relative">
-                    <select
-                      name="year"
-                      value={transferData.year}
-                      onChange={handleChange}
-                      className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white appearance-none"
-                      required
-                    >
-                      <option value="">Select year</option>
-                      {yearOptions.map((year) => (
-                        <option key={year} value={year} className="bg-gray-800 text-white">
-                          {year}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                      <svg className="w-4 h-4 fill-current text-gray-400" viewBox="0 0 20 20">
-                        <path
-                          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                          fillRule="evenodd"
-                        ></path>
-                      </svg>
+                  {/* Error/Success Messages for Recipient Search */}
+                  {error && (
+                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+                      <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                      <span className="text-red-800 text-sm">{error}</span>
                     </div>
-                  </div>
+                  )}
+
+                  {success && (
+                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      <span className="text-green-800 text-sm">{success}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
+        )}
 
-          {/* Right Column - New Owner & Transfer Details */}
+        {/* Step 3: Recipient Details & Transfer Confirmation */}
+        {currentStep === 3 && vehicleData && recipientData && (
           <div className="space-y-6">
-            {/* New Owner Information */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">New Owner Information</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">New Owner Name *</label>
-                  <input
-                    type="text"
-                    name="newOwnerName"
-                    value={transferData.newOwnerName}
-                    onChange={handleChange}
-                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white"
-                    required
-                  />
+            {/* Recipient Details */}
+            <div className="bg-white rounded-xl shadow-sm border p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+                <User className="w-5 h-5 text-blue-600" />
+                <span>Recipient Details</span>
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Name:</span>
+                    <span className="font-medium">{recipientData.fullName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">CNIC:</span>
+                    <span className="font-medium">{recipientData.cnic}</span>
+                  </div>
                 </div>
-
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">New Owner CNIC (13 digits) *</label>
-                  <input
-                    type="text"
-                    name="newOwnerCnic"
-                    value={transferData.newOwnerCnic}
-                    onChange={handleChange}
-                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white"
-                    placeholder="1234567890123"
-                    maxLength="13"
-                    required
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {transferData.newOwnerCnic.length}/13 digits
-                    {transferData.newOwnerCnic.length > 0 && transferData.newOwnerCnic.length !== 13 && (
-                      <span className="text-red-400 ml-2">Must be exactly 13 digits</span>
-                    )}
-                  </p>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Email:</span>
+                    <span className="font-medium text-sm">{recipientData.email}</span>
                 </div>
-
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">New Owner Address *</label>
-                  <textarea
-                    name="newOwnerAddress"
-                    value={transferData.newOwnerAddress}
-                    onChange={handleChange}
-                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white resize-none"
-                    rows="3"
-                    required
-                  />
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Wallet:</span>
+                    <span className="font-medium text-xs">{recipientData.walletAddress.slice(0, 6)}...{recipientData.walletAddress.slice(-4)}</span>
                 </div>
-
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">New Owner Phone (11 digits) *</label>
-                  <input
-                    type="text"
-                    name="newOwnerPhone"
-                    value={transferData.newOwnerPhone}
-                    onChange={handleChange}
-                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white"
-                    placeholder="03001234567"
-                    maxLength="11"
-                    required
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {transferData.newOwnerPhone.length}/11 digits
-                    {transferData.newOwnerPhone.length > 0 && transferData.newOwnerPhone.length !== 11 && (
-                      <span className="text-red-400 ml-2">Must be exactly 11 digits</span>
-                    )}
-                  </p>
                 </div>
               </div>
             </div>
 
             {/* Transfer Details */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Transfer Details</h3>
+            <div className="bg-white rounded-xl shadow-sm border p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+                <FileText className="w-5 h-5 text-orange-600" />
+                <span>Transfer Details</span>
+              </h3>
+              
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Transfer Type *</label>
-                  <div className="relative">
-                    <select
-                      name="transferType"
-                      value={transferData.transferType}
-                      onChange={handleChange}
-                      className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white appearance-none"
-                      required
-                    >
-                      <option value="">Select transfer type</option>
-                      <option value="sale">Sale</option>
-                      <option value="gift">Gift</option>
-                      <option value="inheritance">Inheritance</option>
-                      <option value="court_order">Court Order</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                      <svg className="w-4 h-4 fill-current text-gray-400" viewBox="0 0 20 20">
-                        <path
-                          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                          fillRule="evenodd"
-                        ></path>
-                      </svg>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Transfer Fee:</span>
+                  <span className="text-2xl font-bold text-green-600">PKR {transferFee.toLocaleString()}</span>
+                </div>
+                
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-yellow-800">
+                      <p className="font-medium mb-1">Important Notice:</p>
+                      <ul className="list-disc list-inside space-y-1">
+                        <li>This action will permanently transfer ownership of the vehicle</li>
+                        <li>Make sure all taxes and fees are paid before transfer</li>
+                        <li>You will need to connect your wallet to complete the transfer</li>
+                        <li>A transfer deed will be generated and stored on the blockchain</li>
+                      </ul>
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Transfer Reason *</label>
-                  <textarea
-                    name="transferReason"
-                    value={transferData.transferReason}
-                    onChange={handleChange}
-                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white resize-none"
-                    rows="2"
-                    placeholder="Brief reason for transfer"
-                    required
-                  />
+                <div className="flex space-x-4">
+                  <button
+                    onClick={initiateTransfer}
+                    disabled={loading}
+                    className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {loading ? (
+                      <Clock className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <CheckCircle className="w-5 h-5" />
+                    )}
+                    <span>{loading ? 'Initiating...' : 'Initiate Transfer'}</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => setCurrentStep(2)}
+                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Back
+                  </button>
                 </div>
 
-                {transferData.transferType === "sale" && (
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-1">Sale Price (PKR) *</label>
-                    <input
-                      type="text"
-                      name="salePrice"
-                      value={transferData.salePrice}
-                      onChange={handleChange}
-                      className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white"
-                      placeholder="Enter sale price"
-                      required
-                    />
+                {/* Error/Success Messages for Transfer Initiation */}
+                {error && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                    <span className="text-red-800 text-sm">{error}</span>
                   </div>
                 )}
 
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Transfer Date *</label>
-                  <input
-                    type="date"
-                    name="transferDate"
-                    value={transferData.transferDate}
-                    onChange={handleChange}
-                    className="w-full bg-gray-800 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white"
-                    required
-                  />
-                </div>
+                {success && (
+                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span className="text-green-800 text-sm">{success}</span>
+                  </div>
+                )}
               </div>
             </div>
+                  </div>
+                )}
 
-            {/* Required Documents Checklist */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Required Documents Checklist</h3>
-              <div className="space-y-3">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="hasNOC"
-                    checked={transferData.hasNOC}
-                    onChange={handleChange}
-                    className="mr-3 w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500"
-                  />
-                  <span className="text-white">No Objection Certificate (NOC) *</span>
-                </label>
+        {/* Step 4: Complete Transfer */}
+        {currentStep === 4 && transferData && (
+          <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="text-center mb-6">
+              <Shield className="w-12 h-12 text-green-600 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Complete Transfer</h2>
+              <p className="text-gray-600">Connect your wallet and complete the ownership transfer</p>
+            </div>
 
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="hasClearance"
-                    checked={transferData.hasClearance}
-                    onChange={handleChange}
-                    className="mr-3 w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500"
-                  />
-                  <span className="text-white">Tax Clearance Certificate *</span>
-                </label>
+            <div className="max-w-2xl mx-auto space-y-6">
+              {/* Transfer Summary */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-3">Transfer Summary</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Transfer ID:</span>
+                    <span className="font-medium">{transferData.transferId}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Vehicle:</span>
+                    <span className="font-medium">{transferData.vehicle.make} {transferData.vehicle.model}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">From:</span>
+                    <span className="font-medium">{transferData.fromOwner.fullName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">To:</span>
+                    <span className="font-medium">{transferData.toOwner.fullName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Fee:</span>
+                    <span className="font-medium text-green-600">PKR {transferData.transferFee.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
 
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="hasInsurance"
-                    checked={transferData.hasInsurance}
-                    onChange={handleChange}
-                    className="mr-3 w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500"
-                  />
-                  <span className="text-white">Valid Insurance Certificate *</span>
-                </label>
+              {/* Wallet Connection Status */}
+              {!isWalletConnected ? (
+                <div className="text-center">
+                  <button
+                    onClick={connectWallet}
+                    className="flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+                  >
+                    <Shield className="w-5 h-5" />
+                    <span>Connect Wallet to Continue</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-green-800 text-sm">
+                      ✓ Wallet Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                    </p>
+                  </div>
+                  
+                  <button
+                    onClick={completeTransfer}
+                    disabled={loading}
+                    className="flex items-center justify-center space-x-2 px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mx-auto"
+                  >
+                    {loading ? (
+                      <Clock className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <CheckCircle className="w-5 h-5" />
+                    )}
+                    <span>{loading ? 'Completing Transfer...' : 'Complete Transfer'}</span>
+                  </button>
 
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="hasTransferCertificate"
-                    checked={transferData.hasTransferCertificate}
-                    onChange={handleChange}
-                    className="mr-3 w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500"
-                  />
-                  <span className="text-white">Transfer Certificate *</span>
-                </label>
+                  {/* Error/Success Messages for Transfer Completion */}
+                  {error && (
+                    <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+                      <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                      <span className="text-red-800 text-sm">{error}</span>
+                    </div>
+                  )}
+
+                  {success && (
+                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      <span className="text-green-800 text-sm">{success}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Success */}
+        {currentStep === 5 && (
+          <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="text-center">
+              <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Transfer Completed!</h2>
+              <p className="text-gray-600 mb-6">Vehicle ownership has been successfully transferred</p>
+
+              {transferData && (
+                <div className="max-w-md mx-auto bg-gray-50 rounded-lg p-4 mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-3">Transfer Details</h3>
+                  <div className="space-y-2 text-sm text-left">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Transfer ID:</span>
+                      <span className="font-medium">{transferData.transferId}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Vehicle:</span>
+                      <span className="font-medium">{transferData.vehicle.make} {transferData.vehicle.model}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">New Owner:</span>
+                      <span className="font-medium">{transferData.toOwner.fullName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Completed:</span>
+                      <span className="font-medium">{new Date().toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex space-x-4 justify-center">
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Go to Dashboard
+                </button>
+                <button
+                  onClick={resetForm}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Transfer Another Vehicle
+                </button>
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="mt-8 flex justify-center">
-          <button
-            onClick={submitTransferRequest}
-            disabled={isSubmitting || transferSuccess}
-            className={`${
-              isSubmitting || transferSuccess ? "bg-gray-600 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-            } text-white px-10 py-2 rounded-md font-medium transition duration-200 w-64`}
-          >
-            {isSubmitting
-              ? "Processing..."
-              : transferSuccess
-                ? "Transfer Request Submitted ✔️"
-                : "Submit Transfer Request"}
-          </button>
-        </div>
-
-        <div className="mt-4 text-center">
-          <a href={"/dashboard"} className="inline-block text-sm text-blue-400 hover:underline">
-            Go to Dashboard →
-          </a>
-        </div>
+        )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default OwnershipTransfer
+export default OwnershipTransfer;

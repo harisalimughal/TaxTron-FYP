@@ -23,8 +23,8 @@ const Navigation = ({ user, onLogout }) => {
   const menuItems = [
     { icon: Plus, label: 'Register Vehicle', path: '/vehicle/register', color: 'bg-green-500' },
     { icon: CreditCard, label: 'Pay Tax', path: '/tax-payment', color: 'bg-blue-500' },
-    { icon: History, label: 'View History', path: '/history', color: 'bg-purple-500' },
-    { icon: ArrowRightLeft, label: 'Ownership Transfer', path: '/transfer', color: 'bg-orange-500' },
+    { icon: History, label: 'View History', path: '/ownership-history', color: 'bg-purple-500' },
+    { icon: ArrowRightLeft, label: 'Ownership Transfer', path: '/ownership-transfer', color: 'bg-orange-500' },
     { icon: SearchCheck, label: 'Inspections', path: '/inspections', color: 'bg-teal-500' },
   ];
 

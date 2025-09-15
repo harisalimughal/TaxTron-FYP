@@ -11,6 +11,7 @@ const vehicleDatabaseRoutes = require('./routes/vehicleDatabaseRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const inspectionRoutes = require('./routes/inspectionRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const ownershipTransferRoutes = require('./routes/ownershipTransferRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -76,6 +77,13 @@ try {
   console.log('✓ Admin routes loaded');
 } catch (error) {
   console.error('Error loading admin routes:', error);
+}
+
+try {
+  app.use('/api/ownership-transfer', ownershipTransferRoutes);
+  console.log('✓ Ownership transfer routes loaded');
+} catch (error) {
+  console.error('Error loading ownership transfer routes:', error);
 }
 
 try {

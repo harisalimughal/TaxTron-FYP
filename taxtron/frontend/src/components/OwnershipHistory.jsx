@@ -1,288 +1,494 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { 
+  ArrowLeft, 
+  Car, 
+  User, 
+  Calendar, 
+  FileText, 
+  Clock, 
+  CheckCircle,
+  AlertCircle,
+  Download,
+  Copy,
+  ExternalLink,
+  Shield,
+  History
+} from 'lucide-react';
+import axios from 'axios';
 
 const OwnershipHistory = () => {
-  const navigate = useNavigate()
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filterStatus, setFilterStatus] = useState("all")
-  const [historyData, setHistoryData] = useState([])
-  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate();
+  const { vehicleId } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [historyData, setHistoryData] = useState(null);
+  const [userTransfers, setUserTransfers] = useState([]);
 
-  // Mock data - replace with actual API call
   useEffect(() => {
-    const mockData = [
-      {
-        id: "VH001",
-        vehicleId: "REG-2024-001",
-        make: "Toyota",
-        model: "Corolla",
-        year: 2020,
-        registrationNumber: "ABC-123",
-        currentOwner: "John Doe",
-        previousOwner: "Jane Smith",
-        transferDate: "2024-01-15",
-        transferType: "Sale",
-        status: "Completed",
-        documents: ["Transfer Certificate", "NOC", "Insurance"],
-      },
-      {
-        id: "VH002",
-        vehicleId: "REG-2024-002",
-        make: "Honda",
-        model: "Civic",
-        year: 2019,
-        registrationNumber: "XYZ-456",
-        currentOwner: "Alice Johnson",
-        previousOwner: "Bob Wilson",
-        transferDate: "2024-02-20",
-        transferType: "Gift",
-        status: "Pending",
-        documents: ["Transfer Certificate", "Gift Deed"],
-      },
-      {
-        id: "VH003",
-        vehicleId: "REG-2024-003",
-        make: "Suzuki",
-        model: "Alto",
-        year: 2021,
-        registrationNumber: "DEF-789",
-        currentOwner: "Mike Brown",
-        previousOwner: "Sarah Davis",
-        transferDate: "2024-03-10",
-        transferType: "Sale",
-        status: "Completed",
-        documents: ["Transfer Certificate", "NOC", "Insurance", "Tax Certificate"],
-      },
-    ]
-
-    setTimeout(() => {
-      setHistoryData(mockData)
-      setLoading(false)
-    }, 1000)
-  }, [])
-
-  const filteredHistory = historyData.filter((item) => {
-    const matchesSearch =
-      item.registrationNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.currentOwner.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.previousOwner.toLowerCase().includes(searchTerm.toLowerCase())
-
-    const matchesFilter = filterStatus === "all" || item.status.toLowerCase() === filterStatus.toLowerCase()
-
-    return matchesSearch && matchesFilter
-  })
-
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case "completed":
-        return "text-green-400 bg-green-900/50 border-green-500"
-      case "pending":
-        return "text-yellow-400 bg-yellow-900/50 border-yellow-500"
-      case "rejected":
-        return "text-red-400 bg-red-900/50 border-red-500"
-      default:
-        return "text-gray-400 bg-gray-900/50 border-gray-500"
+    if (vehicleId) {
+      fetchOwnershipHistory();
+    } else {
+      fetchUserTransfers();
     }
-  }
+  }, [vehicleId]);
+
+  const fetchOwnershipHistory = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('userToken');
+      const response = await axios.get(`/api/ownership-transfer/history/${vehicleId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        setHistoryData(response.data.history);
+      } else {
+        setError(response.data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching ownership history:', error);
+      setError(error.response?.data?.message || 'Failed to fetch ownership history');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserTransfers = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('userToken');
+      const response = await axios.get('/api/ownership-transfer/my-transfers', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        setUserTransfers(response.data.transfers);
+      } else {
+        setError(response.data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching user transfers:', error);
+      setError(error.response?.data?.message || 'Failed to fetch transfer history');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-PK', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 
   const getTransferTypeColor = (type) => {
-    switch (type.toLowerCase()) {
-      case "sale":
-        return "text-blue-400 bg-blue-900/50"
-      case "gift":
-        return "text-purple-400 bg-purple-900/50"
-      case "inheritance":
-        return "text-orange-400 bg-orange-900/50"
+    switch (type) {
+      case 'registration':
+        return 'bg-blue-100 text-blue-800';
+      case 'transfer':
+        return 'bg-green-100 text-green-800';
       default:
-        return "text-gray-400 bg-gray-900/50"
+        return 'bg-gray-100 text-gray-800';
     }
-  }
+  };
+
+  const getTransferTypeIcon = (type) => {
+    switch (type) {
+      case 'registration':
+        return <FileText className="w-4 h-4" />;
+      case 'transfer':
+        return <Shield className="w-4 h-4" />;
+      default:
+        return <Clock className="w-4 h-4" />;
+    }
+  };
 
   if (loading) {
     return (
-      <div className="bg-gray-900 min-h-screen text-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-white">Loading ownership history...</p>
+          <Clock className="w-8 h-8 text-green-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading ownership history...</p>
         </div>
       </div>
-    )
+    );
   }
 
+  if (error) {
   return (
-    <div className="bg-gray-900 min-h-screen text-white">
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Ownership History</h2>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="text-center">
+              <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Error</h2>
+              <p className="text-gray-600 mb-6">{error}</p>
           <button
-            className="text-blue-400 hover:text-blue-300 transition duration-200"
-            onClick={() => navigate("/dashboard")}
+                onClick={() => navigate('/dashboard')}
+                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
-            &lt; Back to Dashboard
+                Go to Dashboard
           </button>
-        </div>
-
-        {/* Search and Filter Bar */}
-        <div className="bg-gray-800 rounded-md p-4 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Search by registration number, make, model, or owner name..."
-                className="w-full bg-gray-700 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-            <div className="relative">
-              <select
-                className="bg-gray-700 border-b border-blue-500 focus:border-blue-400 outline-none p-2 text-white appearance-none min-w-[200px]"
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-              >
-                <option value="all">All Status</option>
-                <option value="completed">Completed</option>
-                <option value="pending">Pending</option>
-                <option value="rejected">Rejected</option>
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                <svg className="w-4 h-4 fill-current text-gray-400" viewBox="0 0 20 20">
-                  <path
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                    fillRule="evenodd"
-                  ></path>
-                </svg>
+  // If no vehicleId, show user's transfer history
+  if (!vehicleId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5 text-gray-600" />
+                </button>
+                <div>
+                  <h1 className="text-xl font-bold text-gray-900">My Transfer History</h1>
+                  <p className="text-sm text-gray-600">All your vehicle ownership transfers</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* History Cards */}
-        <div className="space-y-4">
-          {filteredHistory.length > 0 ? (
-            filteredHistory.map((item) => (
-              <div key={item.id} className="bg-gray-800 rounded-md p-6 border-l-4 border-blue-500">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-4">
-                  <div className="mb-4 lg:mb-0">
-                    <h3 className="text-xl font-semibold text-white mb-1">
-                      {item.make} {item.model} ({item.year})
-                    </h3>
-                    <p className="text-gray-400">Registration: {item.registrationNumber}</p>
-                  </div>
-
-                  <div className="flex items-center space-x-3">
-                    <span className={`px-3 py-1 rounded-md text-sm font-medium border ${getStatusColor(item.status)}`}>
-                      {item.status}
-                    </span>
-                    <span
-                      className={`px-3 py-1 rounded-md text-sm font-medium ${getTransferTypeColor(item.transferType)}`}
-                    >
-                      {item.transferType}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                  <div>
-                    <p className="text-sm text-gray-400">Current Owner</p>
-                    <p className="text-white font-medium">{item.currentOwner}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-400">Previous Owner</p>
-                    <p className="text-white font-medium">{item.previousOwner}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-400">Transfer Date</p>
-                    <p className="text-white font-medium">{new Date(item.transferDate).toLocaleDateString()}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-400">Documents</p>
-                    <p className="text-white font-medium">{item.documents.length} files</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="text-sm text-gray-400">Documents:</span>
-                  {item.documents.map((doc, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 bg-gray-700 rounded text-xs text-gray-300 border border-gray-600"
-                    >
-                      {doc}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="flex justify-end space-x-3">
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm transition duration-200">
-                    View Details
-                  </button>
-                  <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm transition duration-200">
-                    Download Report
-                  </button>
-                </div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {userTransfers.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-sm border p-6">
+              <div className="text-center">
+                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h2 className="text-xl font-bold text-gray-900 mb-2">No Transfers Found</h2>
+                <p className="text-gray-600 mb-6">You haven't made any vehicle transfers yet.</p>
+                <button
+                  onClick={() => navigate('/ownership-transfer')}
+                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Transfer Vehicle
+                </button>
               </div>
-            ))
+            </div>
           ) : (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <svg className="w-16 h-16 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fillRule="evenodd"
-                    d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V4H6z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">No ownership history found</h3>
-              <p className="text-gray-400">
-                {searchTerm || filterStatus !== "all"
-                  ? "Try adjusting your search or filter criteria"
-                  : "No vehicle ownership transfers recorded yet"}
-              </p>
+            <div className="space-y-6">
+              {userTransfers.map((transfer, index) => (
+                <div key={index} className="bg-white rounded-xl shadow-sm border p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <Shield className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Transfer #{transfer.transferId}</h3>
+                        <p className="text-sm text-gray-600">
+                          {transfer.vehicle.make} {transfer.vehicle.model} - {transfer.vehicle.chassisNumber}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      transfer.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      transfer.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {transfer.status.charAt(0).toUpperCase() + transfer.status.slice(1)}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">From:</span>
+                      <p className="font-medium">{transfer.fromOwner.fullName}</p>
+                      <p className="text-xs text-gray-500">{transfer.fromOwner.cnic}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">To:</span>
+                      <p className="font-medium">{transfer.toOwner.fullName}</p>
+                      <p className="text-xs text-gray-500">{transfer.toOwner.cnic}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Transfer Fee:</span>
+                      <p className="font-medium text-green-600">PKR {transfer.transferFee.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Date:</span>
+                      <p className="font-medium">{new Date(transfer.transferDate).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
+      </div>
+    );
+  }
 
-        {/* Summary Stats */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gray-800 rounded-md p-4 text-center border-l-4 border-blue-500">
-            <div className="text-2xl font-bold text-white mb-1">{historyData.length}</div>
-            <div className="text-gray-400 text-sm">Total Transfers</div>
-          </div>
-          <div className="bg-gray-800 rounded-md p-4 text-center border-l-4 border-green-500">
-            <div className="text-2xl font-bold text-green-400 mb-1">
-              {historyData.filter((item) => item.status === "Completed").length}
+  if (!historyData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="text-center">
+              <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-gray-900 mb-2">No History Found</h2>
+              <p className="text-gray-600 mb-6">No ownership history found for this vehicle.</p>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Go to Dashboard
+              </button>
             </div>
-            <div className="text-gray-400 text-sm">Completed</div>
           </div>
-          <div className="bg-gray-800 rounded-md p-4 text-center border-l-4 border-yellow-500">
-            <div className="text-2xl font-bold text-yellow-400 mb-1">
-              {historyData.filter((item) => item.status === "Pending").length}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              </button>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Ownership History</h1>
+                <p className="text-sm text-gray-600">Complete ownership trail for this vehicle</p>
+              </div>
             </div>
-            <div className="text-gray-400 text-sm">Pending</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Vehicle Information */}
+        <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
+          <div className="flex items-center space-x-3 mb-4">
+            <Car className="w-6 h-6 text-green-600" />
+            <h2 className="text-xl font-bold text-gray-900">Vehicle Information</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <span className="text-sm text-gray-600">Vehicle ID:</span>
+              <p className="font-medium">{historyData.vehicleId}</p>
+            </div>
+            <div>
+              <span className="text-sm text-gray-600">Chassis Number:</span>
+              <p className="font-medium text-xs">{historyData.chassisNumber}</p>
+            </div>
+            <div>
+              <span className="text-sm text-gray-600">Total Transfers:</span>
+              <p className="font-medium text-green-600">{historyData.totalTransfers}</p>
+            </div>
           </div>
         </div>
 
-        {/* Dashboard Link */}
-        <div className="mt-6 text-center">
-          <a href={"/dashboard"} className="inline-block text-sm text-blue-400 hover:underline">
-            Go to Dashboard →
-          </a>
+        {/* Ownership Timeline */}
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <History className="w-6 h-6 text-blue-600" />
+            <h2 className="text-xl font-bold text-gray-900">Ownership Timeline</h2>
+          </div>
+
+          <div className="space-y-6">
+            {historyData.ownershipHistory.map((owner, index) => (
+              <div key={index} className="relative">
+                {/* Timeline Line */}
+                {index < historyData.ownershipHistory.length - 1 && (
+                  <div className="absolute left-6 top-12 w-0.5 h-16 bg-gray-200"></div>
+                )}
+
+                <div className="flex items-start space-x-4">
+                  {/* Timeline Icon */}
+                  <div className={`flex items-center justify-center w-12 h-12 rounded-full ${
+                    owner.isCurrentOwner 
+                      ? 'bg-green-100 text-green-600' 
+                      : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {getTransferTypeIcon(owner.transferType)}
+                  </div>
+
+                  {/* Owner Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {owner.ownerName}
+                            </h3>
+                            {owner.isCurrentOwner && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Current Owner
+                    </span>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-600">CNIC:</span>
+                              <p className="font-medium">{owner.cnic}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Email:</span>
+                              <p className="font-medium text-xs">{owner.email}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Wallet Address:</span>
+                              <div className="flex items-center space-x-2">
+                                <p className="font-medium text-xs">
+                                  {owner.walletAddress.slice(0, 6)}...{owner.walletAddress.slice(-4)}
+                                </p>
+                                <button
+                                  onClick={() => copyToClipboard(owner.walletAddress)}
+                                  className="p-1 hover:bg-gray-200 rounded"
+                                >
+                                  <Copy className="w-3 h-3 text-gray-500" />
+                                </button>
+                              </div>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Transfer Type:</span>
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getTransferTypeColor(owner.transferType)}`}>
+                                {owner.transferType === 'registration' ? 'Initial Registration' : 'Ownership Transfer'}
+                    </span>
+                  </div>
+                </div>
+
+                          {/* Ownership Period */}
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <div className="flex items-center space-x-6 text-sm">
+                              <div className="flex items-center space-x-2">
+                                <Calendar className="w-4 h-4 text-gray-500" />
+                                <span className="text-gray-600">From:</span>
+                                <span className="font-medium">{formatDate(owner.startDate)}</span>
+                              </div>
+                              {owner.endDate && (
+                                <div className="flex items-center space-x-2">
+                                  <Calendar className="w-4 h-4 text-gray-500" />
+                                  <span className="text-gray-600">To:</span>
+                                  <span className="font-medium">{formatDate(owner.endDate)}</span>
+                                </div>
+                              )}
+                              {!owner.endDate && (
+                                <div className="flex items-center space-x-2">
+                                  <Clock className="w-4 h-4 text-green-500" />
+                                  <span className="text-green-600 font-medium">Ongoing</span>
+                                </div>
+                              )}
+                            </div>
+                  </div>
+
+                          {/* Transfer ID (if applicable) */}
+                          {owner.transferId && (
+                            <div className="mt-3 pt-3 border-t border-gray-200">
+                              <div className="flex items-center space-x-2 text-sm">
+                                <span className="text-gray-600">Transfer ID:</span>
+                                <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                                  {owner.transferId}
+                                </span>
+                                <button
+                                  onClick={() => copyToClipboard(owner.transferId)}
+                                  className="p-1 hover:bg-gray-200 rounded"
+                                >
+                                  <Copy className="w-3 h-3 text-gray-500" />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                  </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-col space-y-2">
+                          <button
+                            onClick={() => copyToClipboard(owner.walletAddress)}
+                            className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <Copy className="w-4 h-4" />
+                            <span>Copy Wallet</span>
+                          </button>
+                          {owner.transferId && (
+                            <button
+                              onClick={() => copyToClipboard(owner.transferId)}
+                              className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                              <FileText className="w-4 h-4" />
+                              <span>Copy Transfer ID</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                  </div>
+                  </div>
+                </div>
+              </div>
+                  ))}
+                </div>
+
+          {/* Summary */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">
+                  {historyData.ownershipHistory.length}
+                </div>
+                <div className="text-sm text-blue-800">Total Owners</div>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">
+                  {historyData.totalTransfers}
+                </div>
+                <div className="text-sm text-green-800">Transfers Made</div>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">
+                  {historyData.ownershipHistory.find(owner => owner.isCurrentOwner)?.ownerName || 'Unknown'}
+            </div>
+                <div className="text-sm text-purple-800">Current Owner</div>
+          </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="mt-8 flex justify-center space-x-4">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Back to Dashboard
+          </button>
+          <button
+            onClick={() => navigate('/ownership-transfer')}
+            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Transfer Vehicle
+          </button>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default OwnershipHistory
+export default OwnershipHistory;

@@ -18,7 +18,8 @@ import {
   ChevronDown,
   ChevronUp,
   Award,
-  DollarSign
+  DollarSign,
+  Shield
 } from "lucide-react";
 
 const Dashboard = () => {
@@ -305,40 +306,6 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* Quick Actions for Paid Vehicles - NFT Certificates Available */}
-            {vehicles.filter(v => v.registrationFeePaid && v.registrationNumber !== 'Pending').length > 0 && (
-              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-200 mb-8">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">NFT Certificates Available</h3>
-                    <p className="text-sm text-gray-600">
-                      You have {vehicles.filter(v => v.registrationFeePaid && v.registrationNumber !== 'Pending').length} vehicle(s) with NFT certificates ready to view.
-                    </p>
-                  </div>
-                  <div className="flex space-x-3">
-                    {vehicles.filter(v => v.registrationFeePaid && v.registrationNumber !== 'Pending').slice(0, 2).map((vehicle, index) => (
-                      <button
-                        key={index}
-                        onClick={() => navigate(`/view-nft/${vehicle.inspectionId}`)}
-                        className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center"
-                      >
-                        <Award className="w-4 h-4 mr-2" />
-                        {vehicle.make} {vehicle.model} NFT
-                      </button>
-                    ))}
-                    {vehicles.filter(v => v.registrationFeePaid && v.registrationNumber !== 'Pending').length > 2 && (
-                      <button
-                        onClick={() => navigate('/inspections')}
-                        className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
-                      >
-                        View All ({vehicles.filter(v => v.registrationFeePaid && v.registrationNumber !== 'Pending').length - 2} more)
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Quick Actions for Tax Payments */}
             {vehicles.filter(v => v.registrationFeePaid && !v.taxPaid).length > 0 && (
               <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-200 mb-8">
@@ -453,6 +420,35 @@ const Dashboard = () => {
                                     </button>
                                   )
                                 )}
+                                
+                                {/* Ownership History Button */}
+                                {vehicle.registrationFeePaid && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/ownership-history/${vehicle.inspectionId}`);
+                                    }}
+                                    className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors flex items-center"
+                                  >
+                                    <Clock className="w-3 h-3 mr-1" />
+                                    History
+                                  </button>
+                                )}
+                                
+                                {/* Ownership Transfer Button */}
+                                {vehicle.registrationFeePaid && vehicle.taxPaid && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate('/ownership-transfer');
+                                    }}
+                                    className="bg-purple-100 text-purple-700 px-3 py-2 rounded-lg text-xs font-medium hover:bg-purple-200 transition-colors flex items-center"
+                                  >
+                                    <Shield className="w-3 h-3 mr-1" />
+                                    Transfer
+                                  </button>
+                                )}
+                                
                                 <button 
                                   className="p-2 text-gray-400 hover:text-gray-600"
                                   onClick={(e) => {

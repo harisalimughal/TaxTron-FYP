@@ -69,8 +69,9 @@ const AppRoutes = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       
       {/* Other routes */}
-      <Route path="/history" element={<OwnershipHistory />} />
-      <Route path="/transfer" element={<OwnershipTransfer/>}/>
+      <Route path="/ownership-history" element={<OwnershipHistory />} />
+      <Route path="/ownership-history/:vehicleId" element={<OwnershipHistory />} />
+      <Route path="/ownership-transfer" element={<OwnershipTransfer/>}/>
       <Route path="/tax-payment" element={<TaxPayment/>} />
       <Route path="/view-nft/:inspectionId" element={<NFTPage />} />
       <Route path="/pay-fee/:inspectionId" element={<PayFee />} />
