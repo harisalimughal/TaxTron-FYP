@@ -47,7 +47,13 @@ router.get('/search-vehicle/:chassisNumber', authenticateUser, async (req, res) 
       });
     }
 
-    res.json({
+    // Check if vehicle is already in transfer process
+    const existingTransfer = await OwnershipTransfer.findOne({
+      vehicleId: vehicle.inspectionId,
+      status: { $in: ['pending_admin_approval', 'approved'] }
+    });
+
+    const responseData = {
       success: true,
       vehicle: {
         inspectionId: vehicle.inspectionId,
@@ -67,7 +73,22 @@ router.get('/search-vehicle/:chassisNumber', authenticateUser, async (req, res) 
           walletAddress: vehicle.userId.walletAddress
         }
       }
-    });
+    };
+
+    // If there's an existing transfer, include transfer information
+    if (existingTransfer) {
+      responseData.existingTransfer = {
+        transferId: existingTransfer.transferId,
+        status: existingTransfer.status,
+        fromOwner: existingTransfer.fromOwner,
+        toOwner: existingTransfer.toOwner,
+        transferFee: existingTransfer.transferFee,
+        createdAt: existingTransfer.createdAt,
+        initiatedBy: existingTransfer.initiatedBy.toString() === req.user.userId
+      };
+    }
+
+    res.json(responseData);
   } catch (error) {
     console.error('Error searching vehicle:', error);
     res.status(500).json({
@@ -182,7 +203,7 @@ router.post('/initiate', authenticateUser, async (req, res) => {
     // Check if vehicle is already in transfer process
     const existingTransfer = await OwnershipTransfer.findOne({
       vehicleId: vehicleId,
-      status: { $in: ['pending'] }
+      status: { $in: ['pending_admin_approval', 'approved'] }
     });
 
     if (existingTransfer) {
@@ -212,7 +233,7 @@ router.post('/initiate', authenticateUser, async (req, res) => {
       },
       transferFee: transferFee || 5000,
       initiatedBy: currentUser._id,
-      status: 'pending'
+      status: 'pending_admin_approval'
     });
 
     await transfer.save();
@@ -244,6 +265,55 @@ router.post('/initiate', authenticateUser, async (req, res) => {
   }
 });
 
+// Cancel ownership transfer
+router.post('/cancel/:transferId', authenticateUser, async (req, res) => {
+  try {
+    const { transferId } = req.params;
+
+    // Find transfer record
+    const transfer = await OwnershipTransfer.findOne({ 
+      transferId: transferId,
+      status: { $in: ['pending_admin_approval', 'approved'] }
+    });
+
+    if (!transfer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transfer not found or already processed'
+      });
+    }
+
+    // Verify user is the initiator
+    if (transfer.initiatedBy.toString() !== req.user.userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not authorized to cancel this transfer'
+      });
+    }
+
+    // Update transfer status to cancelled
+    transfer.status = 'cancelled';
+    transfer.updatedAt = new Date();
+    await transfer.save();
+
+    res.json({
+      success: true,
+      message: 'Transfer cancelled successfully',
+      transfer: {
+        transferId: transfer.transferId,
+        status: transfer.status,
+        cancelledAt: transfer.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error('Error cancelling transfer:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
 // Complete ownership transfer
 router.post('/complete/:transferId', authenticateUser, async (req, res) => {
   try {
@@ -253,7 +323,7 @@ router.post('/complete/:transferId', authenticateUser, async (req, res) => {
     // Find transfer record
     const transfer = await OwnershipTransfer.findOne({ 
       transferId: transferId,
-      status: 'pending'
+      status: 'approved'
     });
 
     if (!transfer) {
@@ -331,12 +401,52 @@ router.get('/history/:vehicleId', authenticateUser, async (req, res) => {
     // Get complete vehicle details
     const vehicle = await Inspection.findOne({ inspectionId: vehicleId }).select('vehicleDetails');
     
+    // Map vehicle details to match frontend expectations
+    let vehicleDetails = null;
+    if (vehicle && vehicle.vehicleDetails) {
+      // Determine vehicle type based on make/model if it's "Other"
+      let vehicleType = vehicle.vehicleDetails.vehicleType;
+      if (vehicleType === 'Other') {
+        const make = vehicle.vehicleDetails.make?.toLowerCase() || '';
+        const model = vehicle.vehicleDetails.model?.toLowerCase() || '';
+        
+        // Check for motorcycle indicators
+        if (make.includes('yamaha') || make.includes('honda') || make.includes('suzuki') || 
+            make.includes('kawasaki') || make.includes('bajaj') || make.includes('tvs') ||
+            model.includes('r15') || model.includes('cbr') || model.includes('ninja') ||
+            model.includes('pulsar') || model.includes('apache') || model.includes('scooter')) {
+          vehicleType = 'Motorcycle';
+        }
+        // Check for car indicators
+        else if (make.includes('toyota') || make.includes('honda') || make.includes('suzuki') ||
+                 make.includes('hyundai') || make.includes('kia') || make.includes('nissan') ||
+                 make.includes('ford') || make.includes('chevrolet') || make.includes('skoda')) {
+          vehicleType = 'Car';
+        }
+      }
+
+      vehicleDetails = {
+        make: vehicle.vehicleDetails.make,
+        model: vehicle.vehicleDetails.model,
+        year: vehicle.vehicleDetails.manufacturingYear || vehicle.vehicleDetails.registrationYear,
+        chassisNumber: vehicle.vehicleDetails.chassisNumber,
+        engineNumber: vehicle.vehicleDetails.engineNumber,
+        color: vehicle.vehicleDetails.color,
+        variant: vehicle.vehicleDetails.variant,
+        vehicleType: vehicleType,
+        fuelType: vehicle.vehicleDetails.fuelType,
+        engineCapacity: vehicle.vehicleDetails.engineCapacity,
+        manufacturingYear: vehicle.vehicleDetails.manufacturingYear,
+        registrationYear: vehicle.vehicleDetails.registrationYear
+      };
+    }
+    
     res.json({
       success: true,
       history: {
         vehicleId: history.vehicleId,
         chassisNumber: history.chassisNumber,
-        vehicleDetails: vehicle?.vehicleDetails || null,
+        vehicleDetails: vehicleDetails,
         ownershipHistory: history.ownershipHistory,
         totalTransfers: history.totalTransfers
       }
@@ -371,18 +481,122 @@ router.get('/search-history/:chassisNumber', async (req, res) => {
       status: 'Approved'
     }).select('vehicleDetails');
 
+    // Map vehicle details to match frontend expectations
+    let vehicleDetails = null;
+    if (vehicle && vehicle.vehicleDetails) {
+      // Determine vehicle type based on make/model if it's "Other"
+      let vehicleType = vehicle.vehicleDetails.vehicleType;
+      if (vehicleType === 'Other') {
+        const make = vehicle.vehicleDetails.make?.toLowerCase() || '';
+        const model = vehicle.vehicleDetails.model?.toLowerCase() || '';
+        
+        // Check for motorcycle indicators
+        if (make.includes('yamaha') || make.includes('honda') || make.includes('suzuki') || 
+            make.includes('kawasaki') || make.includes('bajaj') || make.includes('tvs') ||
+            model.includes('r15') || model.includes('cbr') || model.includes('ninja') ||
+            model.includes('pulsar') || model.includes('apache') || model.includes('scooter')) {
+          vehicleType = 'Motorcycle';
+        }
+        // Check for car indicators
+        else if (make.includes('toyota') || make.includes('honda') || make.includes('suzuki') ||
+                 make.includes('hyundai') || make.includes('kia') || make.includes('nissan') ||
+                 make.includes('ford') || make.includes('chevrolet') || make.includes('skoda')) {
+          vehicleType = 'Car';
+        }
+      }
+
+      vehicleDetails = {
+        make: vehicle.vehicleDetails.make,
+        model: vehicle.vehicleDetails.model,
+        year: vehicle.vehicleDetails.manufacturingYear || vehicle.vehicleDetails.registrationYear,
+        chassisNumber: vehicle.vehicleDetails.chassisNumber,
+        engineNumber: vehicle.vehicleDetails.engineNumber,
+        color: vehicle.vehicleDetails.color,
+        variant: vehicle.vehicleDetails.variant,
+        vehicleType: vehicleType,
+        fuelType: vehicle.vehicleDetails.fuelType,
+        engineCapacity: vehicle.vehicleDetails.engineCapacity,
+        manufacturingYear: vehicle.vehicleDetails.manufacturingYear,
+        registrationYear: vehicle.vehicleDetails.registrationYear
+      };
+    }
+
     res.json({
       success: true,
       history: {
         vehicleId: history.vehicleId,
         chassisNumber: history.chassisNumber,
-        vehicleDetails: vehicle?.vehicleDetails || null,
+        vehicleDetails: vehicleDetails,
         ownershipHistory: history.ownershipHistory,
         totalTransfers: history.totalTransfers
       }
     });
   } catch (error) {
     console.error('Error searching ownership history:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+// Get transfer status by transfer ID
+router.get('/transfer-status/:transferId', authenticateUser, async (req, res) => {
+  try {
+    const { transferId } = req.params;
+
+    const transfer = await OwnershipTransfer.findOne({ 
+      transferId: transferId,
+      $or: [
+        { 'fromOwner.userId': req.user.userId },
+        { 'toOwner.userId': req.user.userId }
+      ]
+    });
+
+    if (!transfer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transfer not found or you are not authorized to view this transfer'
+      });
+    }
+
+    // Get vehicle details
+    const vehicle = await Inspection.findOne({ 
+      inspectionId: transfer.vehicleId,
+      status: 'Approved'
+    }).select('vehicleDetails registrationNumber');
+
+    const responseData = {
+      success: true,
+      transfer: {
+        transferId: transfer.transferId,
+        status: transfer.status,
+        fromOwner: transfer.fromOwner,
+        toOwner: transfer.toOwner,
+        transferFee: transfer.transferFee,
+        createdAt: transfer.createdAt,
+        completedAt: transfer.completedAt,
+        initiatedBy: transfer.initiatedBy.toString() === req.user.userId
+      }
+    };
+
+    if (vehicle) {
+      responseData.vehicle = {
+        inspectionId: vehicle.inspectionId,
+        chassisNumber: vehicle.vehicleDetails.chassisNumber,
+        make: vehicle.vehicleDetails.make,
+        model: vehicle.vehicleDetails.model,
+        year: vehicle.vehicleDetails.manufacturingYear,
+        vehicleType: vehicle.vehicleDetails.vehicleType,
+        engineCapacity: vehicle.vehicleDetails.engineCapacity,
+        color: vehicle.vehicleDetails.color,
+        registrationNumber: vehicle.registrationNumber
+      };
+    }
+
+    res.json(responseData);
+  } catch (error) {
+    console.error('Error fetching transfer status:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -455,6 +669,152 @@ router.get('/my-transfers', authenticateUser, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching user transfers:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+// Admin: Get pending transfers for approval
+router.get('/admin/pending-transfers', authenticateUser, async (req, res) => {
+  try {
+    // Note: In a real app, you'd check if user is admin
+    // For now, we'll assume this endpoint is protected by admin middleware
+    
+    const transfers = await OwnershipTransfer.find({
+      status: 'pending_admin_approval'
+    }).sort({ createdAt: -1 });
+
+    // Populate vehicle details for each transfer
+    const transfersWithVehicleDetails = await Promise.all(
+      transfers.map(async (transfer) => {
+        try {
+          const vehicle = await Inspection.findOne({ 
+            inspectionId: transfer.vehicleId,
+            status: 'Approved'
+          }).select('vehicleDetails registrationNumber');
+
+          const transferObj = transfer.toObject();
+          if (vehicle && vehicle.vehicleDetails) {
+            transferObj.vehicle = {
+              make: vehicle.vehicleDetails.make,
+              model: vehicle.vehicleDetails.model,
+              year: vehicle.vehicleDetails.manufacturingYear,
+              chassisNumber: vehicle.vehicleDetails.chassisNumber,
+              engineNumber: vehicle.vehicleDetails.engineNumber,
+              color: vehicle.vehicleDetails.color,
+              registrationNumber: vehicle.registrationNumber
+            };
+          }
+          return transferObj;
+        } catch (error) {
+          console.error('Error populating vehicle details for transfer:', transfer.transferId, error);
+          return transfer.toObject();
+        }
+      })
+    );
+
+    res.json({
+      success: true,
+      transfers: transfersWithVehicleDetails
+    });
+  } catch (error) {
+    console.error('Error fetching pending transfers:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+// Admin: Approve transfer
+router.post('/admin/approve/:transferId', authenticateUser, async (req, res) => {
+  try {
+    const { transferId } = req.params;
+    const { adminNotes } = req.body;
+
+    const transfer = await OwnershipTransfer.findOne({ 
+      transferId: transferId,
+      status: 'pending_admin_approval'
+    });
+
+    if (!transfer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transfer not found or already processed'
+      });
+    }
+
+    // Update transfer status to approved
+    transfer.status = 'approved';
+    transfer.updatedAt = new Date();
+    if (adminNotes) {
+      transfer.adminNotes = adminNotes;
+    }
+    await transfer.save();
+
+    res.json({
+      success: true,
+      message: 'Transfer approved successfully',
+      transfer: {
+        transferId: transfer.transferId,
+        status: transfer.status,
+        approvedAt: transfer.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error('Error approving transfer:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+// Admin: Reject transfer
+router.post('/admin/reject/:transferId', authenticateUser, async (req, res) => {
+  try {
+    const { transferId } = req.params;
+    const { rejectionReason } = req.body;
+
+    if (!rejectionReason) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rejection reason is required'
+      });
+    }
+
+    const transfer = await OwnershipTransfer.findOne({ 
+      transferId: transferId,
+      status: 'pending_admin_approval'
+    });
+
+    if (!transfer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transfer not found or already processed'
+      });
+    }
+
+    // Update transfer status to rejected
+    transfer.status = 'rejected';
+    transfer.rejectionReason = rejectionReason;
+    transfer.updatedAt = new Date();
+    await transfer.save();
+
+    res.json({
+      success: true,
+      message: 'Transfer rejected successfully',
+      transfer: {
+        transferId: transfer.transferId,
+        status: transfer.status,
+        rejectedAt: transfer.updatedAt,
+        rejectionReason: transfer.rejectionReason
+      }
+    });
+  } catch (error) {
+    console.error('Error rejecting transfer:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

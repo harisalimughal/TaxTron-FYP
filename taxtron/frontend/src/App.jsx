@@ -23,6 +23,8 @@ import TaxPayment from "./components/TaxPayment";
 import OwnershipTransfer from "./components/OwnershipTransfer";
 import UserInspections from "./components/UserInspections";
 import AdminTaxManagement from "./components/AdminTaxManagement";
+import AdminTransferManagement from "./components/AdminTransferManagement";
+import MyVehicles from "./components/MyVehicles";
 
 // Create a separate component for routes that uses auth context
 const AppRoutes = () => {
@@ -67,6 +69,7 @@ const AppRoutes = () => {
       
       {/* Main dashboard (will check for user authentication) */}
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/vehicles" element={<MyVehicles />} />
       
       {/* Other routes */}
       <Route path="/ownership-history" element={<OwnershipHistory />} />
@@ -99,6 +102,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <AdminTaxManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route 
+        path="/admin/transfer-management" 
+        element={
+          <ProtectedRoute>
+            <AdminTransferManagement />
           </ProtectedRoute>
         }
       />

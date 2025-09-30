@@ -3,6 +3,30 @@ const Admin = require('../models/Admin');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 
+// 📌 Create Admin (Temporary endpoint for setup)
+router.post('/create', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Check if admin already exists
+    const existingAdmin = await Admin.findOne({ email });
+    if (existingAdmin) {
+      return res.status(400).json({ message: 'Admin account already exists' });
+    }
+
+    // Create new admin
+    const admin = new Admin({
+      email,
+      password
+    });
+
+    await admin.save();
+    res.json({ message: 'Admin account created successfully', email });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 📌 Admin Login
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;

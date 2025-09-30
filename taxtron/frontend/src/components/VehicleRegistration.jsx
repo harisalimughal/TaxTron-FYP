@@ -66,7 +66,18 @@ const VehicleRegistration = () => {
             'Motorcycle': 'Motorcycle',
             'Bus': 'Bus',
             'Van': 'Van',
-            'SUV': 'SUV'
+            'SUV': 'SUV',
+            'Car': 'Car',
+            'Truck': 'Truck',
+            'Two Wheeler': 'Motorcycle',
+            'Four Wheeler': 'Car',
+            'Heavy Vehicle': 'Truck',
+            'Light Commercial Vehicle': 'Van',
+            'Heavy Commercial Vehicle': 'Truck',
+            'Passenger Car': 'Car',
+            'Commercial Truck': 'Truck',
+            'Motor Bike': 'Motorcycle',
+            'Scooter': 'Motorcycle'
           };
           return mapping[category] || 'Other';
         };

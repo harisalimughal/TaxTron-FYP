@@ -18,19 +18,28 @@ import {
 
 const Navigation = ({ user, onLogout }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [navigating, setNavigating] = useState(false);
   const navigate = useNavigate();
 
   const menuItems = [
     { icon: Plus, label: 'Register Vehicle', path: '/vehicle/register', color: 'bg-green-500' },
     { icon: CreditCard, label: 'Pay Tax', path: '/tax-payment', color: 'bg-blue-500' },
-    { icon: History, label: 'View History', path: '/ownership-history', color: 'bg-purple-500' },
+    { icon: History, label: 'Ownership History', path: '/ownership-history', color: 'bg-purple-500' },
     { icon: ArrowRightLeft, label: 'Ownership Transfer', path: '/ownership-transfer', color: 'bg-orange-500' },
     { icon: SearchCheck, label: 'Inspections', path: '/inspections', color: 'bg-teal-500' },
   ];
 
   const handleNavigation = (path) => {
-    navigate(path);
-    setIsMobileMenuOpen(false);
+    if (path === '/vehicle/register') {
+      setNavigating(true);
+      setTimeout(() => {
+        navigate(path);
+        setIsMobileMenuOpen(false);
+      }, 500);
+    } else {
+      navigate(path);
+      setIsMobileMenuOpen(false);
+    }
   };
 
   return (
@@ -83,6 +92,16 @@ const Navigation = ({ user, onLogout }) => {
           </nav>
         </div>
       </div>
+
+      {/* Navigation Loader Overlay */}
+      {navigating && (
+        <div className="fixed inset-0 bg-gray-50 z-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin h-8 w-8 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-gray-600 text-sm">Loading registration form...</p>
+          </div>
+        </div>
+      )}
     </>
   );
 };

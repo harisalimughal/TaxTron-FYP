@@ -12,9 +12,11 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "axios": "^1.8.4",
+    "chart.js": "^4.5.0",
     "html2pdf.js": "^0.10.3",
     "lucide-react": "^0.510.0",
     "react": "^19.0.0",
+    "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.2.0",
     "web3": "^4.16.0"

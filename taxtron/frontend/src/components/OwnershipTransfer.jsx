@@ -13,7 +13,8 @@ import {
   CreditCard,
   ExternalLink,
   Copy,
-  Download
+  Download,
+  RefreshCw
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -56,6 +57,7 @@ const OwnershipTransfer = () => {
   const [vehicleData, setVehicleData] = useState(null);
   const [recipientData, setRecipientData] = useState(null);
   const [transferData, setTransferData] = useState(null);
+  const [existingTransfer, setExistingTransfer] = useState(null);
 
   // Wallet states
   const [walletAddress, setWalletAddress] = useState('');
@@ -66,7 +68,65 @@ const OwnershipTransfer = () => {
     if (window.ethereum) {
       checkWalletConnection();
     }
+    
+    // Check for existing transfers when component mounts
+    checkForExistingTransfers();
   }, []);
+
+  const checkForExistingTransfers = async () => {
+    try {
+      const token = localStorage.getItem('userToken');
+      if (!token) return;
+
+      // Get user's transfers
+      const response = await axios.get('/api/ownership-transfer/my-transfers', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success && response.data.transfers.length > 0) {
+        // Find the most recent pending or approved transfer
+        const activeTransfer = response.data.transfers.find(transfer => 
+          transfer.status === 'pending_admin_approval' || 
+          transfer.status === 'approved' ||
+          transfer.status === 'rejected'
+        );
+
+        if (activeTransfer) {
+          // Set the transfer data and go to step 4
+          setTransferData(activeTransfer);
+          setExistingTransfer(activeTransfer);
+          setCurrentStep(4);
+          
+          // If it's a new transfer (not from search), we need to get vehicle data
+          if (!vehicleData) {
+            // Try to get vehicle data from the transfer
+            if (activeTransfer.vehicle) {
+              setVehicleData({
+                inspectionId: activeTransfer.vehicleId,
+                make: activeTransfer.vehicle.make,
+                model: activeTransfer.vehicle.model,
+                year: activeTransfer.vehicle.year,
+                chassisNumber: activeTransfer.vehicle.chassisNumber,
+                engineCapacity: activeTransfer.vehicle.engineCapacity,
+                color: activeTransfer.vehicle.color,
+                registrationNumber: activeTransfer.vehicle.registrationNumber,
+                vehicleType: activeTransfer.vehicle.vehicleType,
+                currentOwner: {
+                  name: activeTransfer.fromOwner.fullName,
+                  cnic: activeTransfer.fromOwner.cnic,
+                  email: activeTransfer.fromOwner.email,
+                  walletAddress: activeTransfer.fromOwner.walletAddress
+                }
+              });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking for existing transfers:', error);
+      // Don't show error to user as this is a background check
+    }
+  };
 
   const checkWalletConnection = async () => {
     try {
@@ -119,8 +179,17 @@ const OwnershipTransfer = () => {
 
       if (response.data.success) {
         setVehicleData(response.data.vehicle);
-        setCurrentStep(2);
-        setSuccess('Vehicle found successfully!');
+        
+        // Check if there's an existing transfer
+        if (response.data.existingTransfer) {
+          setExistingTransfer(response.data.existingTransfer);
+          setTransferData(response.data.existingTransfer);
+          setCurrentStep(4); // Go directly to transfer completion step
+          setSuccess('Vehicle found! There is an existing transfer in progress.');
+        } else {
+          setCurrentStep(2);
+          setSuccess('Vehicle found successfully!');
+        }
       } else {
         setError(response.data.message);
       }
@@ -185,7 +254,7 @@ const OwnershipTransfer = () => {
       if (response.data.success) {
         setTransferData(response.data.transfer);
         setCurrentStep(4);
-        setSuccess('Transfer initiated successfully!');
+        setSuccess('Transfer submitted for admin approval! You will be notified once approved.');
       } else {
         setError(response.data.message);
       }
@@ -236,6 +305,80 @@ const OwnershipTransfer = () => {
     }
   };
 
+  const cancelTransfer = async () => {
+    if (!transferData) {
+      setError('No transfer data available');
+      return;
+    }
+
+    if (!window.confirm('Are you sure you want to cancel this transfer? This action cannot be undone.')) {
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('userToken');
+      const response = await axios.post(`/api/ownership-transfer/cancel/${transferData.transferId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        setSuccess('Transfer cancelled successfully!');
+        // Reset the form after a short delay
+        setTimeout(() => {
+          resetForm();
+        }, 2000);
+      } else {
+        setError(response.data.message);
+      }
+    } catch (error) {
+      console.error('Error cancelling transfer:', error);
+      setError(error.response?.data?.message || 'Failed to cancel transfer');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshTransferStatus = async () => {
+    if (!transferData) return;
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('userToken');
+      const response = await axios.get(`/api/ownership-transfer/transfer-status/${transferData.transferId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        const updatedTransfer = response.data.transfer;
+        setTransferData(updatedTransfer);
+        setExistingTransfer(updatedTransfer);
+        
+        // Show success message if status changed
+        if (updatedTransfer.status !== transferData.status) {
+          if (updatedTransfer.status === 'approved') {
+            setSuccess('Transfer has been approved! You can now complete the transfer.');
+          } else if (updatedTransfer.status === 'rejected') {
+            setError('Transfer has been rejected. Please check the reason below.');
+          }
+        } else {
+          setSuccess('Transfer status updated.');
+        }
+      } else {
+        setError(response.data.message);
+      }
+    } catch (error) {
+      console.error('Error refreshing transfer status:', error);
+      setError('Failed to refresh transfer status');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetForm = () => {
     setCurrentStep(1);
     setChassisNumber('');
@@ -243,6 +386,7 @@ const OwnershipTransfer = () => {
     setVehicleData(null);
     setRecipientData(null);
     setTransferData(null);
+    setExistingTransfer(null);
     setError('');
     setSuccess('');
   };
@@ -590,16 +734,53 @@ const OwnershipTransfer = () => {
                   </div>
                 )}
 
-        {/* Step 4: Complete Transfer */}
-        {currentStep === 4 && transferData && (
+        {/* Step 4: Transfer Status */}
+        {currentStep === 4 && transferData && vehicleData && (
           <div className="bg-white rounded-xl shadow-sm border p-6">
             <div className="text-center mb-6">
-              <Shield className="w-12 h-12 text-green-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Complete Transfer</h2>
-              <p className="text-gray-600">Connect your wallet and complete the ownership transfer</p>
+              <div className="flex items-center justify-center space-x-4 mb-4">
+                <Shield className="w-12 h-12 text-green-600" />
+                <button
+                  onClick={refreshTransferStatus}
+                  disabled={loading}
+                  className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                >
+                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                  <span>Refresh Status</span>
+                </button>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                {transferData.status === 'pending_admin_approval' 
+                  ? 'Transfer Submitted for Approval' 
+                  : transferData.status === 'approved'
+                    ? 'Transfer Approved - Complete Transfer'
+                    : 'Transfer Status'
+                }
+              </h2>
+              <p className="text-gray-600">
+                {transferData.status === 'pending_admin_approval' 
+                  ? 'Your transfer request is under admin review. You will be notified once approved.'
+                  : transferData.status === 'approved'
+                    ? 'Your transfer has been approved. Connect your wallet to complete the transfer.'
+                    : 'Check your transfer status below.'
+                }
+              </p>
             </div>
 
             <div className="max-w-2xl mx-auto space-y-6">
+              {/* Existing Transfer Notice */}
+              {existingTransfer && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <Clock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium mb-1">Transfer Already in Progress</p>
+                      <p>This vehicle has an existing transfer initiated on {new Date(existingTransfer.createdAt).toLocaleDateString()}. You can continue from where you left off.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Transfer Summary */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-900 mb-3">Transfer Summary</h3>
@@ -609,70 +790,158 @@ const OwnershipTransfer = () => {
                     <span className="font-medium">{transferData.transferId}</span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-gray-600">Status:</span>
+                    <span className={`font-medium px-2 py-1 rounded text-xs ${
+                      transferData.status === 'pending_admin_approval' 
+                        ? 'bg-yellow-100 text-yellow-800' 
+                        : transferData.status === 'approved'
+                          ? 'bg-green-100 text-green-800'
+                          : transferData.status === 'rejected'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {transferData.status.replace('_', ' ').toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-gray-600">Vehicle:</span>
-                    <span className="font-medium">{transferData.vehicle.make} {transferData.vehicle.model}</span>
+                    <span className="font-medium">
+                      {transferData.vehicle 
+                        ? `${transferData.vehicle.make} ${transferData.vehicle.model}`
+                        : vehicleData 
+                          ? `${vehicleData.make} ${vehicleData.model}`
+                          : 'Unknown Vehicle'
+                      }
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">From:</span>
-                    <span className="font-medium">{transferData.fromOwner.fullName}</span>
+                    <span className="font-medium">
+                      {transferData.fromOwner?.fullName || 'Unknown Owner'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">To:</span>
-                    <span className="font-medium">{transferData.toOwner.fullName}</span>
+                    <span className="font-medium">
+                      {transferData.toOwner?.fullName || 'Unknown Recipient'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Fee:</span>
                     <span className="font-medium text-green-600">PKR {transferData.transferFee.toLocaleString()}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Last Updated:</span>
+                    <span className="font-medium text-sm">
+                      {transferData.updatedAt 
+                        ? new Date(transferData.updatedAt).toLocaleString()
+                        : new Date(transferData.createdAt).toLocaleString()
+                      }
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Wallet Connection Status */}
-              {!isWalletConnected ? (
+              {/* Show different content based on transfer status */}
+              {transferData.status === 'pending_admin_approval' ? (
                 <div className="text-center">
-                  <button
-                    onClick={connectWallet}
-                    className="flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
-                  >
-                    <Shield className="w-5 h-5" />
-                    <span>Connect Wallet to Continue</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-green-800 text-sm">
-                      ✓ Wallet Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                  <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <Clock className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
+                    <p className="text-yellow-800 font-medium mb-1">Awaiting Admin Approval</p>
+                    <p className="text-yellow-700 text-sm">
+                      Your transfer request is being reviewed by an administrator. 
+                      You will be notified once the decision is made.
                     </p>
                   </div>
                   
                   <button
-                    onClick={completeTransfer}
+                    onClick={cancelTransfer}
                     disabled={loading}
-                    className="flex items-center justify-center space-x-2 px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mx-auto"
+                    className="flex items-center justify-center space-x-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mx-auto"
                   >
-                    {loading ? (
-                      <Clock className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <CheckCircle className="w-5 h-5" />
-                    )}
-                    <span>{loading ? 'Completing Transfer...' : 'Complete Transfer'}</span>
+                    <AlertCircle className="w-5 h-5" />
+                    <span>Cancel Transfer</span>
                   </button>
-
-                  {/* Error/Success Messages for Transfer Completion */}
-                  {error && (
-                    <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
-                      <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
-                      <span className="text-red-800 text-sm">{error}</span>
+                </div>
+              ) : transferData.status === 'approved' ? (
+                <>
+                  {/* Wallet Connection Status */}
+                  {!isWalletConnected ? (
+                    <div className="text-center">
+                      <button
+                        onClick={connectWallet}
+                        className="flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+                      >
+                        <Shield className="w-5 h-5" />
+                        <span>Connect Wallet to Complete Transfer</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-green-800 text-sm">
+                          ✓ Wallet Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                        </p>
+                      </div>
+                      
+                      <div className="flex space-x-4 justify-center">
+                        <button
+                          onClick={completeTransfer}
+                          disabled={loading}
+                          className="flex items-center justify-center space-x-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {loading ? (
+                            <Clock className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <CheckCircle className="w-5 h-5" />
+                          )}
+                          <span>{loading ? 'Completing Transfer...' : 'Complete Transfer'}</span>
+                        </button>
+                        
+                        <button
+                          onClick={cancelTransfer}
+                          disabled={loading}
+                          className="flex items-center justify-center space-x-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <AlertCircle className="w-5 h-5" />
+                          <span>Cancel Transfer</span>
+                        </button>
+                      </div>
                     </div>
                   )}
+                </>
+              ) : transferData.status === 'rejected' ? (
+                <div className="text-center">
+                  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <AlertCircle className="w-8 h-8 text-red-600 mx-auto mb-2" />
+                    <p className="text-red-800 font-medium mb-1">Transfer Rejected</p>
+                    <p className="text-red-700 text-sm">
+                      {transferData.rejectionReason || 'Your transfer request has been rejected by the administrator.'}
+                    </p>
+                  </div>
+                  
+                  <button
+                    onClick={resetForm}
+                    className="flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                    <span>Start New Transfer</span>
+                  </button>
+                </div>
+              ) : null}
 
-                  {success && (
-                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
-                      <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                      <span className="text-green-800 text-sm">{success}</span>
-                    </div>
-                  )}
+              {/* Error/Success Messages */}
+              {error && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                  <span className="text-red-800 text-sm">{error}</span>
+                </div>
+              )}
+
+              {success && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <span className="text-green-800 text-sm">{success}</span>
                 </div>
               )}
             </div>
@@ -680,7 +949,7 @@ const OwnershipTransfer = () => {
         )}
 
         {/* Step 5: Success */}
-        {currentStep === 5 && (
+        {currentStep === 5 && transferData && (
           <div className="bg-white rounded-xl shadow-sm border p-6">
             <div className="text-center">
               <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
@@ -697,11 +966,20 @@ const OwnershipTransfer = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Vehicle:</span>
-                      <span className="font-medium">{transferData.vehicle.make} {transferData.vehicle.model}</span>
+                      <span className="font-medium">
+                        {transferData.vehicle 
+                          ? `${transferData.vehicle.make} ${transferData.vehicle.model}`
+                          : vehicleData 
+                            ? `${vehicleData.make} ${vehicleData.model}`
+                            : 'Unknown Vehicle'
+                        }
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">New Owner:</span>
-                      <span className="font-medium">{transferData.toOwner.fullName}</span>
+                      <span className="font-medium">
+                        {transferData.toOwner?.fullName || 'Unknown Owner'}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Completed:</span>

@@ -158,20 +158,36 @@ const OwnershipHistory = () => {
   }
 
   if (error) {
-  return (
+    // Check if it's a "no history found" type error
+    const isNoHistoryError = error.toLowerCase().includes('no history') || 
+                            error.toLowerCase().includes('not found') || 
+                            error.toLowerCase().includes('no ownership') ||
+                            error.toLowerCase().includes('no records');
+    
+    return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-white rounded-xl shadow-sm border p-6">
             <div className="text-center">
-              <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Error</h2>
-              <p className="text-gray-600 mb-6">{error}</p>
-          <button
+              {isNoHistoryError ? (
+                <>
+                  <History className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">No History Found</h2>
+                  <p className="text-gray-600 mb-6">No ownership history records were found for this vehicle.</p>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">Error</h2>
+                  <p className="text-gray-600 mb-6">{error}</p>
+                </>
+              )}
+              <button
                 onClick={() => navigate('/dashboard')}
                 className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-          >
+              >
                 Go to Dashboard
-          </button>
+              </button>
             </div>
           </div>
         </div>
@@ -253,72 +269,6 @@ const OwnershipHistory = () => {
             </div>
           </div>
         )}
-
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {userTransfers.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm border p-6">
-              <div className="text-center">
-                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h2 className="text-xl font-bold text-gray-900 mb-2">No Transfers Found</h2>
-                <p className="text-gray-600 mb-6">You haven't made any vehicle transfers yet.</p>
-                <button
-                  onClick={() => navigate('/ownership-transfer')}
-                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  Transfer Vehicle
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {userTransfers.map((transfer, index) => (
-                <div key={index} className="bg-white rounded-xl shadow-sm border p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                        <Shield className="w-5 h-5 text-green-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Transfer #{transfer.transferId}</h3>
-                        <p className="text-sm text-gray-600">
-                          {transfer.vehicle?.make || 'Unknown'} {transfer.vehicle?.model || 'Unknown'} - {transfer.vehicle?.chassisNumber || transfer.chassisNumber}
-                        </p>
-                      </div>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      transfer.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      transfer.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {transfer.status.charAt(0).toUpperCase() + transfer.status.slice(1)}
-                    </span>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">From:</span>
-                      <p className="font-medium">{transfer.fromOwner?.fullName || 'Unknown'}</p>
-                      <p className="text-xs text-gray-500">{transfer.fromOwner?.cnic || 'Unknown'}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">To:</span>
-                      <p className="font-medium">{transfer.toOwner?.fullName || 'Unknown'}</p>
-                      <p className="text-xs text-gray-500">{transfer.toOwner?.cnic || 'Unknown'}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Transfer Fee:</span>
-                      <p className="font-medium text-green-600">PKR {transfer.transferFee?.toLocaleString() || '0'}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Date:</span>
-                      <p className="font-medium">{transfer.transferDate ? new Date(transfer.transferDate).toLocaleDateString() : 'Unknown'}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     );
   }
@@ -408,32 +358,44 @@ const OwnershipHistory = () => {
           {historyData.vehicleDetails && (
             <div className="mt-6 pt-6 border-t border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Complete Vehicle Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div>
-                  <span className="text-sm text-gray-600">Make:</span>
-                  <p className="font-medium">{historyData.vehicleDetails.make || 'Unknown'}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Model:</span>
-                  <p className="font-medium">{historyData.vehicleDetails.model || 'Unknown'}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Year:</span>
-                  <p className="font-medium">{historyData.vehicleDetails.year || 'Unknown'}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Engine Number:</span>
-                  <p className="font-medium text-xs">{historyData.vehicleDetails.engineNumber || 'Unknown'}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Color:</span>
-                  <p className="font-medium">{historyData.vehicleDetails.color || 'Unknown'}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Registration Status:</span>
-                  <p className="font-medium text-green-600">Approved</p>
-                </div>
-              </div>
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 <div>
+                   <span className="text-sm text-gray-600">Make:</span>
+                   <p className="font-medium">{historyData.vehicleDetails.make || 'Unknown'}</p>
+                 </div>
+                 <div>
+                   <span className="text-sm text-gray-600">Model:</span>
+                   <p className="font-medium">{historyData.vehicleDetails.model || 'Unknown'}</p>
+                 </div>
+                 <div>
+                   <span className="text-sm text-gray-600">Year:</span>
+                   <p className="font-medium">{historyData.vehicleDetails.year || 'Unknown'}</p>
+                 </div>
+                 <div>
+                   <span className="text-sm text-gray-600">Engine Number:</span>
+                   <p className="font-medium text-xs">{historyData.vehicleDetails.engineNumber || 'Unknown'}</p>
+                 </div>
+                 <div>
+                   <span className="text-sm text-gray-600">Color:</span>
+                   <p className="font-medium">{historyData.vehicleDetails.color || 'Unknown'}</p>
+                 </div>
+                 <div>
+                   <span className="text-sm text-gray-600">Vehicle Type:</span>
+                   <p className="font-medium">{historyData.vehicleDetails.vehicleType || 'Unknown'}</p>
+                 </div>
+                 <div>
+                   <span className="text-sm text-gray-600">Fuel Type:</span>
+                   <p className="font-medium">{historyData.vehicleDetails.fuelType || 'Unknown'}</p>
+                 </div>
+                 <div>
+                   <span className="text-sm text-gray-600">Engine Capacity:</span>
+                   <p className="font-medium">{historyData.vehicleDetails.engineCapacity ? `${historyData.vehicleDetails.engineCapacity}cc` : 'Unknown'}</p>
+                 </div>
+                 <div>
+                   <span className="text-sm text-gray-600">Registration Status:</span>
+                   <p className="font-medium text-green-600">Approved</p>
+                 </div>
+               </div>
             </div>
           )}
         </div>

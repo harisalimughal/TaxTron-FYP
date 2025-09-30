@@ -73,8 +73,8 @@ const ownershipTransferSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'completed', 'rejected', 'cancelled'],
-    default: 'pending'
+    enum: ['pending_admin_approval', 'approved', 'completed', 'rejected', 'cancelled'],
+    default: 'pending_admin_approval'
   },
   blockchainTxHash: {
     type: String,
