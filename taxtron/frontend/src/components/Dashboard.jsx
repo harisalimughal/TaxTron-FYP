@@ -174,9 +174,8 @@ const Dashboard = () => {
         const pendingInspections = inspectionsResponse.data.success ? 
           inspectionsResponse.data.data.filter(i => i.status === 'Pending').length : 0;
         
-        // Calculate tax due from approved vehicles
-        //const taxDue = vehiclesResponse.data.data.filter(v => !v.taxPaid).length;
-        const taxDue = vehiclesResponse.data.data.filter(v => v.taxStatus === 'Due').length;
+        // Calculate tax due from approved vehicles that have paid registration fee but not tax
+        const taxDue = vehiclesResponse.data.data.filter(v => v.registrationFeePaid && !v.taxPaid).length;
         setStats({
           totalVehicles,
           pendingInspections,
