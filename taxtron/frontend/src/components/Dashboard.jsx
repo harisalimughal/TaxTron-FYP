@@ -166,8 +166,6 @@ const Dashboard = () => {
           console.log('First vehicle structure:', vehiclesResponse.data.data[0]);
         }
         
-        setVehicles(vehiclesResponse.data.data);
-        
         // Calculate stats using correct data sources
         const totalVehicles = vehiclesResponse.data.data.length;
         
@@ -176,7 +174,7 @@ const Dashboard = () => {
           inspectionsResponse.data.data.filter(i => i.status === 'Pending').length : 0;
         
         // Calculate tax due from approved vehicles
-        const taxDue = vehiclesResponse.data.data.filter(v => v.taxStatus === 'Due').length;
+        const taxDue = vehiclesResponse.data.data.filter(v => !v.taxPaid).length;
         
         setStats({
           totalVehicles,
