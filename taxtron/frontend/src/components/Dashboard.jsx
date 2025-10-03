@@ -223,22 +223,22 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-brand-100">
+      <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-50 to-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-10">
           <div className="animate-pulse space-y-8">
             {/* Header skeleton */}
-            <div className="h-16 rounded-2xl bg-white/60 backdrop-blur border border-gray-200/60"></div>
+            <div className="h-16 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.1)] border border-gray-200/50"></div>
             {/* Stats skeleton */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="h-28 bg-white rounded-2xl border border-gray-100"></div>
-              <div className="h-28 bg-white rounded-2xl border border-gray-100"></div>
-              <div className="h-28 bg-white rounded-2xl border border-gray-100"></div>
+              <div className="h-28 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.1)] border border-gray-200/50"></div>
+              <div className="h-28 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.1)] border border-gray-200/50"></div>
+              <div className="h-28 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.1)] border border-gray-200/50"></div>
             </div>
             {/* List skeleton */}
             <div className="space-y-4">
-              <div className="h-24 bg-white rounded-xl border border-gray-100"></div>
-              <div className="h-24 bg-white rounded-xl border border-gray-100"></div>
-              <div className="h-24 bg-white rounded-xl border border-gray-100"></div>
+              <div className="h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.1)] border border-gray-200/50"></div>
+              <div className="h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.1)] border border-gray-200/50"></div>
+              <div className="h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.1)] border border-gray-200/50"></div>
             </div>
           </div>
         </div>
@@ -247,7 +247,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-brand-100">
+    <div className="min-h-screen bg-gradient-to-br from-green-50/30 via-green-100/20 to-green-50/30">
       <div className="flex h-screen">
         {/* Navigation */}
         <Navigation user={user} onLogout={handleLogout} />
@@ -255,7 +255,7 @@ const Dashboard = () => {
         {/* Main Content */}
         <div className="flex-1 lg:ml-0 flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="sticky top-0 z-30 bg-white/60 backdrop-blur border-b border-gray-200/60 supports-[backdrop-filter]:bg-white/60">
+          <div className="sticky top-0 z-30 bg-white backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_2px_8px_rgba(0,0,0,0.08)]">
             <div className="px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
@@ -264,36 +264,36 @@ const Dashboard = () => {
                     <p className="text-sm text-gray-600">Welcome back, {user?.fullName}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center space-x-4">
-                  <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100">
+                  <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-50">
                     <Bell className="w-6 h-6" />
                   </button>
-                  <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100">
+                  <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-50">
                     <Search className="w-6 h-6" />
                   </button>
-                  
+
                   {/* Profile Dropdown */}
                   <div className="relative profile-dropdown">
-                    <button 
+                    <button
                       onClick={toggleProfileDropdown}
-                      className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-brand-400 to-brand-600 rounded-full hover:scale-105 transition-transform cursor-pointer ring-1 ring-brand-300/40 shadow-soft"
+                      className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full hover:from-gray-300 hover:to-gray-400 transition-all duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-1px_0_rgba(0,0,0,0.1),0_2px_4px_rgba(0,0,0,0.1)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] cursor-pointer"
                     >
-                      <span className="text-white font-semibold text-sm">
+                      <span className="text-gray-700 font-semibold text-sm">
                         {user?.fullName?.charAt(0)?.toUpperCase() || 'U'}
                       </span>
                     </button>
-                    
+
                     {/* Dropdown Menu */}
                     {showProfileDropdown && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur rounded-xl shadow-softLg border border-gray-200 py-2 z-50">
-                        <div className="px-4 py-2 border-b border-gray-100">
+                      <div className="absolute right-0 mt-2 w-48 bg-gray-100/95 backdrop-blur-md rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.1)] border border-gray-200/50 py-2 z-50">
+                        <div className="px-4 py-2 border-b border-gray-200/30">
                           <p className="text-sm font-medium text-gray-900">{user?.fullName}</p>
                           <p className="text-xs text-gray-600">{user?.email}</p>
                         </div>
                         <button
                           onClick={handleLogout}
-                          className="w-full flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors rounded-b-xl"
+                          className="w-full flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-200/50 transition-colors rounded-b-xl"
                         >
                           <LogOut className="w-4 h-4" />
                           <span className="text-sm font-medium">Sign Out</span>
@@ -304,42 +304,44 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
+            {/* Subtle gradient border below header */}
+            <div className="h-px bg-gradient-to-r from-transparent via-green-200/30 to-transparent"></div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 lg:p-8">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white rounded-2xl p-6 shadow-soft border border-gray-100 hover:shadow-softLg transition-all hover:-translate-y-0.5">
+              <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.1)] border border-gray-200/50 hover:shadow-[inset_0_2px_4px_rgba(0,0,0,0.1),0_8px_16px_rgba(0,0,0,0.15)] transition-all duration-200">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Vehicles</p>
                     <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalVehicles}</p>
                   </div>
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-brand-500 ring-1 ring-brand-300/40 shadow-md">
-                    <Car className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-1px_0_rgba(0,0,0,0.1)]">
+                    <Car className="w-6 h-6 text-gray-700" />
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-6 shadow-soft border border-gray-100 hover:shadow-softLg transition-all hover:-translate-y-0.5">
+              <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.1)] border border-gray-200/50 hover:shadow-[inset_0_2px_4px_rgba(0,0,0,0.1),0_8px_16px_rgba(0,0,0,0.15)] transition-all duration-200">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Pending Inspections</p>
                     <p className="text-3xl font-bold text-orange-600 mt-2">{stats.pendingInspections}</p>
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-1px_0_rgba(0,0,0,0.1)]">
                     <Clock className="w-6 h-6 text-orange-600" />
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-6 shadow-soft border border-gray-100 hover:shadow-softLg transition-all hover:-translate-y-0.5">
+              <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.1)] border border-gray-200/50 hover:shadow-[inset_0_2px_4px_rgba(0,0,0,0.1),0_8px_16px_rgba(0,0,0,0.15)] transition-all duration-200">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Tax Due</p>
                     <p className="text-3xl font-bold text-red-600 mt-2">{stats.taxDue}</p>
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-1px_0_rgba(0,0,0,0.1)]">
                     <CreditCard className="w-6 h-6 text-red-600" />
                   </div>
                 </div>
@@ -348,11 +350,11 @@ const Dashboard = () => {
             </div>
 
             {/* My Vehicles Section */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-8">
+            <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.1)] border border-gray-200/50 mb-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-brand-500 ring-1 ring-brand-300/40 shadow-md">
-                    <Car className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-1px_0_rgba(0,0,0,0.1)]">
+                    <Car className="w-6 h-6 text-gray-700" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">My Vehicles</h3>
@@ -366,7 +368,7 @@ const Dashboard = () => {
                 </div>
                 <button 
                   onClick={() => navigate('/vehicles')}
-                  className="bg-brand-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-brand-600 transition-all duration-200 transform hover:scale-105 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 flex items-center space-x-2"
+                  className="bg-gradient-to-br from-gray-700 to-gray-800 text-white px-6 py-3 rounded-xl font-medium hover:from-gray-800 hover:to-gray-900 transition-all duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),inset_0_-1px_0_rgba(0,0,0,0.2)] hover:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-600 flex items-center space-x-2"
                 >
                   <Car className="w-4 h-4" />
                   <span>View All Vehicles</span>
@@ -377,7 +379,7 @@ const Dashboard = () => {
             {/* Analytics */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               {/* Bar Chart */}
-              <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-soft">
+              <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.1)] border border-gray-200/50">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Overview</h3>
                 </div>
@@ -387,7 +389,7 @@ const Dashboard = () => {
               </div>
 
               {/* Doughnut Chart */}
-              <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-soft">
+              <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.1)] border border-gray-200/50">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Tax Status</h3>
                 </div>
@@ -412,7 +414,7 @@ const Dashboard = () => {
 
             {/* Quick Actions for Approved Vehicles - Payment Required */}
             {vehicles.filter(v => v.registrationNumber === 'Pending' && !v.registrationFeePaid).length > 0 && (
-              <div className="bg-gradient-to-r from-brand-50 to-brand-100 rounded-2xl p-6 border border-brand-200 mb-8 shadow-soft">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.1)] border border-gray-200/50 mb-8">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Registration Fee Pending</h3>
@@ -425,7 +427,7 @@ const Dashboard = () => {
                       <button
                         key={index}
                         onClick={() => navigate(`/pay-fee/${vehicle.inspectionId}`)}
-                        className="bg-brand-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-600 transition-colors flex items-center shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
+                        className="bg-gradient-to-br from-gray-200 to-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:from-gray-300 hover:to-gray-400 transition-all duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-1px_0_rgba(0,0,0,0.1)] hover:shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] flex items-center"
                       >
                         <CreditCard className="w-4 h-4 mr-2" />
                         Pay {vehicle.make} {vehicle.model}
@@ -434,7 +436,7 @@ const Dashboard = () => {
                     {vehicles.filter(v => v.registrationNumber === 'Pending' && !v.registrationFeePaid).length > 2 && (
                       <button
                         onClick={() => navigate('/inspections')}
-                        className="text-brand-600 hover:text-brand-700 text-sm font-medium"
+                        className="text-gray-600 hover:text-gray-700 text-sm font-medium px-3 py-2 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-1px_0_rgba(0,0,0,0.05)] hover:from-gray-200 hover:to-gray-300 transition-all duration-200"
                       >
                         View All ({vehicles.filter(v => v.registrationNumber === 'Pending' && !v.registrationFeePaid).length - 2} more)
                       </button>
@@ -446,7 +448,7 @@ const Dashboard = () => {
 
             {/* Quick Actions for Tax Payments */}
             {vehicles.filter(v => v.registrationFeePaid && !v.taxPaid).length > 0 && (
-              <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-200 mb-8 shadow-soft">
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_8px_rgba(0,0,0,0.1)] border border-orange-200/50 mb-8">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Annual Tax Due</h3>
@@ -457,7 +459,7 @@ const Dashboard = () => {
                   <div className="flex space-x-3">
                     <button
                       onClick={() => navigate('/tax-payment')}
-                      className="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors flex items-center shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
+                      className="bg-gradient-to-br from-orange-200 to-orange-300 text-orange-800 px-4 py-2 rounded-lg text-sm font-medium hover:from-orange-300 hover:to-orange-400 transition-all duration-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),inset_0_-1px_0_rgba(0,0,0,0.1)] hover:shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] flex items-center"
                     >
                       <DollarSign className="w-4 h-4 mr-2" />
                       Pay Annual Tax

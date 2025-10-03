@@ -107,19 +107,19 @@ const UserInspections = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between py-6 lg:py-8">
             <div className="flex items-center">
               <button
                 onClick={() => navigate('/dashboard')}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors mr-4"
+                className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors mr-4"
               >
                 <ArrowLeft className="w-6 h-6 text-gray-600" />
               </button>
-              <div className="flex items-center">
-                <TaxTronLogo size="2xl" showText={false} />
-                <h1 className="ml-3 text-2xl font-bold text-gray-900">My Inspections</h1>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">My Inspections</h1>
+                <p className="text-sm text-gray-600">Track your vehicle inspection requests</p>
               </div>
             </div>
             <div className="text-sm text-gray-500">

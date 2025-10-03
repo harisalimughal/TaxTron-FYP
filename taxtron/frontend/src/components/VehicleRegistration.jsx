@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TaxTronLogo from './TaxTronLogo';
 
 const VehicleRegistration = () => {
   const navigate = useNavigate();
@@ -19,11 +18,24 @@ const VehicleRegistration = () => {
   const [appointmentSuccess, setAppointmentSuccess] = useState('');
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
   const [isBooked, setIsBooked] = useState(false);
+
+  // Date carousel state
+  const [dateCarouselIndex, setDateCarouselIndex] = useState(0);
+
+  // Ensure carousel index stays within bounds
+  const handleCarouselIndexChange = (newIndex) => {
+    if (!Array.isArray(availableDates) || availableDates.length === 0) {
+      setDateCarouselIndex(0);
+      return;
+    }
+
+    const maxIndex = Math.max(0, availableDates.length - 5);
+    setDateCarouselIndex(Math.max(0, Math.min(maxIndex, newIndex)));
+  };
   
   // Edit mode for vehicle details
   const [isEditMode, setIsEditMode] = useState(false);
   const [originalVehicleData, setOriginalVehicleData] = useState({});
-
   const [vehicleData, setVehicleData] = useState({
     engineNumber: '',
     chassisNumber: '',
@@ -140,14 +152,26 @@ const VehicleRegistration = () => {
     try {
       const response = await fetch('http://localhost:5000/api/appointments/available');
       const data = await response.json();
-      
-      if (data.success) {
-        setAvailableDates(data.data);
+
+      if (data.success && Array.isArray(data.data)) {
+        // Filter out any malformed date objects and ensure proper structure
+        const validDates = data.data.filter(dateObj => {
+          return dateObj &&
+                 typeof dateObj === 'object' &&
+                 dateObj.date &&
+                 Array.isArray(dateObj.availableTimeSlots) &&
+                 dateObj.availableTimeSlots.length > 0;
+        });
+
+        console.log('Valid available dates:', validDates);
+        setAvailableDates(validDates);
       } else {
-        setAppointmentError('Failed to fetch available dates');
+        console.error('Invalid API response format:', data);
+        setAppointmentError('Failed to fetch available dates - invalid response format');
       }
     } catch (error) {
-      setAppointmentError('Error fetching available dates');
+      console.error('Error fetching available dates:', error);
+      setAppointmentError('Error fetching available dates: ' + error.message);
     } finally {
       setAppointmentLoading(false);
     }
@@ -169,8 +193,9 @@ const VehicleRegistration = () => {
     setVehicleData({ ...vehicleData, [name]: value });
   };
 
-  const handleDateSelect = (date) => {
-    setScheduledDate(date);
+  const handleDateSelect = (dateObj) => {
+    // dateObj is now an object with {date, availableTimeSlots}
+    setScheduledDate(dateObj.date);
     setSelectedTimeSlot('');
     setAppointmentSuccess('');
     setAppointmentError('');
@@ -352,47 +377,39 @@ const VehicleRegistration = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 py-8 px-4 sm:px-6 lg:px-8 relative">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-6">
-            <TaxTronLogo size="2xl" showText={false} />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Vehicle Registration</h1>
-          <p className="text-gray-600 mb-4">
-            Register a new vehicle using your account
-          </p>
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 max-w-md mx-auto">
-            <div className="text-sm text-gray-500">Account Details</div>
-            <div className="font-semibold text-gray-900">{user.fullName}</div>
-            <div className="text-sm text-gray-600">CNIC: {user.cnic}</div>
-            <div className="text-xs text-gray-500 font-mono">{user.walletAddress}</div>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
+      {/* Header */}
+      <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-6 lg:py-8">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors"
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Vehicle Registration</h1>
+                <p className="text-sm text-gray-600">Register a new vehicle using your account</p>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Back Arrow */}
-        <div className="absolute top-4 left-4">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-          >
-            <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-          </button>
-        </div>
-
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Vehicle Information */}
           <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Vehicle Information</h2>
             
             {/* Chassis Number Input */}
-            <div className="max-w-md mx-auto">
+            <div className="max-w-md mx-auto text-center">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Enter Vehicle Chassis Number *
-                <span className="text-xs text-gray-500 ml-2">(All details will be auto-fetched)</span>
+                Enter Vehicle Chassis Number
               </label>
               <div className="relative">
                 <input
@@ -407,11 +424,22 @@ const VehicleRegistration = () => {
                       fetchVehicleDetails(e.target.value);
                     }
                   }}
-                  className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-colors duration-200 pr-12 text-center text-lg"
-                  style={{'--tw-ring-color': '#8CC152'}}
-                  onFocus={(e) => e.target.style.borderColor = '#8CC152'}
-                  onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-                  placeholder="Enter chassis number (e.g., JHMFA1F80AS123456)"
+                  className="w-full px-6 py-4 text-lg border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 shadow-sm hover:border-gray-300 text-center font-mono tracking-wider"
+                  style={{
+                    '--tw-ring-color': '#10B981',
+                    backgroundColor: '#FAFAFA'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#10B981';
+                    e.target.style.backgroundColor = '#FFFFFF';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#E5E7EB';
+                    e.target.style.backgroundColor = '#FAFAFA';
+                    e.target.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05)';
+                  }}
+                  placeholder="(e.g., JHMFA1F80AS123456)"
                   required
                 />
                 {isFetchingDetails && (
@@ -674,128 +702,367 @@ const VehicleRegistration = () => {
             )}
           </div>
 
-          {/* Appointment Booking */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">Schedule Inspection Appointment</h2>
-            
-            {!isBooked ? (
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Select Date
-                  </label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {availableDates.map((date) => (
-                      <button
-                        key={date}
-                        type="button"
-                        onClick={() => handleDateSelect(date)}
-                        className={`px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                          scheduledDate === date
-                            ? 'text-white shadow-lg transform scale-105'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-md'
-                        }`}
-                        style={scheduledDate === date ? {backgroundColor: '#8CC152'} : {}}
-                      >
-                        {new Date(date).toLocaleDateString()}
-                      </button>
-                    ))}
-                  </div>
+          {/* Appointment Booking - Modern Design */}
+          <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-md p-4 border border-gray-100 relative z-auto">
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-green-100 to-transparent rounded-full transform translate-x-8 -translate-y-8"></div>
+            <div className="absolute bottom-0 left-0 w-12 h-12 bg-gradient-to-tr from-blue-100 to-transparent rounded-full transform -translate-x-6 translate-y-6"></div>
+
+            <div className="relative z-10">
+              {/* Header */}
+              <div className="text-center mb-4">
+                <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-sm mb-2">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
                 </div>
+                <h2 className="text-lg font-bold text-gray-900 mb-1">Schedule Appointment</h2>
+                <p className="text-xs text-gray-600">Choose date and time</p>
+              </div>
 
-                {scheduledDate && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      Select Time Slot
-                    </label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {['09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM', '04:00 PM'].map((time) => (
-                        <button
-                          key={time}
-                          type="button"
-                          onClick={() => handleTimeSlotSelect(time)}
-                          className={`px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                            selectedTimeSlot === time
-                              ? 'text-white shadow-lg transform scale-105'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-md'
-                          }`}
-                          style={selectedTimeSlot === time ? {backgroundColor: '#8CC152'} : {}}
-                        >
-                          {time}
-                        </button>
-                      ))}
+              {!isBooked ? (
+                <div className="space-y-4">
+                  {/* Step 1: Date Selection - Horizontal Carousel */}
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                    <div className="flex items-center mb-3">
+                      <div className="flex items-center justify-center w-5 h-5 bg-blue-100 text-blue-600 rounded-full text-xs font-semibold mr-2">1</div>
+                      <h3 className="text-sm font-semibold text-gray-900">Select Date</h3>
                     </div>
-                  </div>
-                )}
 
-                {scheduledDate && selectedTimeSlot && (
-                  <button
-                    type="button"
-                    onClick={bookAppointment}
-                    disabled={appointmentLoading}
-                    className="w-full md:w-auto px-8 py-3 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                    style={{backgroundColor: '#8CC152'}}
-                    onMouseEnter={(e) => !e.target.disabled && (e.target.style.backgroundColor = '#7AB142')}
-                    onMouseLeave={(e) => !e.target.disabled && (e.target.style.backgroundColor = '#8CC152')}
-                  >
-                    {appointmentLoading ? (
-                      <div className="flex items-center justify-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    {availableDates.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <svg className="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        Booking...
+                        <p className="text-lg font-medium text-gray-900 mb-2">No dates available</p>
+                        <p className="text-gray-600">All appointment slots are currently booked.</p>
                       </div>
                     ) : (
-                      'Book Appointment'
+                      <>
+                          {/* Horizontal Date Carousel */}
+                        <div className="relative">
+                          {/* Left Navigation Button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleCarouselIndexChange(dateCarouselIndex - 1);
+                            }}
+                            disabled={dateCarouselIndex === 0}
+                            className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 w-8 h-8 bg-white border border-gray-200 rounded-full shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                          >
+                            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+
+                          {/* Date Carousel Container */}
+                          <div className="overflow-hidden px-12">
+                            <div
+                              className="flex transition-transform duration-300 ease-in-out"
+                              style={{
+                                transform: `translateX(-${(Math.min(dateCarouselIndex, Math.max(0, availableDates.length - 5)) * 100) / 5}%)`,
+                                width: `${Math.max(100, (availableDates.length / 5) * 100)}%`
+                              }}
+                            >
+                              {/* Single row with all dates */}
+                              <div className="flex w-full">
+                                {availableDates.map((dateObj, index) => {
+                                  // Ensure dateObj is valid before rendering
+                                  if (!dateObj || !dateObj.date) {
+                                    console.warn('Invalid date object:', dateObj);
+                                    return null;
+                                  }
+
+                                  return (
+                                    <button
+                                      key={dateObj.date}
+                                      type="button"
+                                      onClick={() => handleDateSelect(dateObj)}
+                                      className={`group relative flex-1 mx-1 p-3 rounded-lg text-xs font-medium transition-all duration-200 transform hover:scale-105 ${
+                                        scheduledDate === dateObj.date
+                                          ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-md scale-105'
+                                          : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:shadow-sm border border-transparent hover:border-green-200'
+                                      }`}
+                                    >
+                                      <div className="text-center">
+                                        <div className={`text-xs mb-1 ${scheduledDate === dateObj.date ? 'text-green-100' : 'text-gray-500'}`}>
+                                          {(() => {
+                                            try {
+                                              return new Date(dateObj.date).toLocaleDateString('en-US', { weekday: 'short' });
+                                            } catch (e) {
+                                              console.error('Error parsing date:', dateObj.date, e);
+                                              return 'Invalid';
+                                            }
+                                          })()}
+                                        </div>
+                                        <div className={`text-lg font-bold ${scheduledDate === dateObj.date ? 'text-white' : 'text-gray-900'}`}>
+                                          {(() => {
+                                            try {
+                                              return new Date(dateObj.date).getDate();
+                                            } catch (e) {
+                                              console.error('Error parsing date:', dateObj.date, e);
+                                              return '??';
+                                            }
+                                          })()}
+                                        </div>
+                                        <div className={`text-xs ${scheduledDate === dateObj.date ? 'text-green-100' : 'text-gray-500'}`}>
+                                          {(() => {
+                                            try {
+                                              return new Date(dateObj.date).toLocaleDateString('en-US', { month: 'short' });
+                                            } catch (e) {
+                                              console.error('Error parsing date:', dateObj.date, e);
+                                              return 'Date';
+                                            }
+                                          })()}
+                                        </div>
+                                      </div>
+                                      {scheduledDate === dateObj.date && (
+                                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center">
+                                          <svg className="w-2 h-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                          </svg>
+                                        </div>
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Right Navigation Button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleCarouselIndexChange(dateCarouselIndex + 1);
+                            }}
+                            disabled={dateCarouselIndex >= Math.max(0, availableDates.length - 5)}
+                            className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 w-8 h-8 bg-white border border-gray-200 rounded-full shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                          >
+                            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        {/* Carousel Indicators - Limited to 5 dots */}
+                        <div className="flex justify-center mt-3 space-x-1">
+                          {Array.from({ length: Math.min(5, Math.max(1, Math.max(0, availableDates.length - 4))) }, (_, index) => (
+                            <button
+                              key={index}
+                              type="button"
+                              onClick={() => handleCarouselIndexChange(index)}
+                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                                dateCarouselIndex === index
+                                  ? 'bg-green-500 w-6'
+                                  : 'bg-gray-300 hover:bg-gray-400'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </>
                     )}
-                  </button>
-                )}
+                  </div>
 
-                {appointmentError && (
-                  <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
-                    <div className="flex">
-                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                      <div className="ml-3">
-                        <p className="text-sm">{appointmentError}</p>
+                  {/* Step 2: Time Selection */}
+                  {scheduledDate && (
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100 animate-fade-in">
+                      <div className="flex items-center mb-2">
+                        <div className="flex items-center justify-center w-5 h-5 bg-green-100 text-green-600 rounded-full text-xs font-semibold mr-2">2</div>
+                        <h3 className="text-sm font-semibold text-gray-900">Select Time Slot</h3>
+                      </div>
+
+                      <div className="grid grid-cols-4 md:grid-cols-5 gap-1.5">
+                        {(() => {
+                          // Find the selected date object to get available time slots
+                          const selectedDateObj = availableDates.find(d => d && d.date === scheduledDate);
+                          const availableTimeSlots = selectedDateObj ? selectedDateObj.availableTimeSlots : [];
+
+                          if (!Array.isArray(availableTimeSlots)) {
+                            console.error('Invalid time slots data:', availableTimeSlots);
+                            return (
+                              <div className="col-span-full text-center text-red-500 text-sm">
+                                Error loading time slots
+                              </div>
+                            );
+                          }
+
+                          return ['09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM', '04:00 PM'].map((time) => {
+                            const isAvailable = availableTimeSlots.includes(time);
+                            return (
+                              <button
+                                key={time}
+                                type="button"
+                                onClick={() => isAvailable && handleTimeSlotSelect(time)}
+                                disabled={!isAvailable}
+                                className={`group relative p-2 rounded-md text-xs font-medium transition-all duration-200 transform ${
+                                  selectedTimeSlot === time
+                                    ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-sm scale-105'
+                                    : isAvailable
+                                      ? 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:shadow-sm border border-transparent hover:border-blue-200 hover:scale-105 cursor-pointer'
+                                      : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50'
+                                }`}
+                              >
+                                <div className="text-center">
+                                  <div className={`text-sm font-bold ${selectedTimeSlot === time ? 'text-white' : isAvailable ? 'text-gray-900' : 'text-gray-400'}`}>
+                                    {time}
+                                  </div>
+                                </div>
+                                {selectedTimeSlot === time && (
+                                  <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-white rounded-full flex items-center justify-center">
+                                    <svg className="w-1.5 h-1.5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          });
+                        })()}
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {appointmentSuccess && (
-                  <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
-                    <div className="flex">
-                      <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <div className="ml-3">
-                        <p className="text-sm font-semibold">Appointment Booked Successfully!</p>
-                        <p className="text-sm">Date: {new Date(scheduledDate).toLocaleDateString()}</p>
-                        <p className="text-sm">Time: {selectedTimeSlot}</p>
-                        <p className="text-sm">Inspection ID: {inspectionId}</p>
+                  {/* Step 3: Confirmation & Booking */}
+                  {scheduledDate && selectedTimeSlot && (
+                    <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-lg p-3 border border-green-200 animate-fade-in">
+                      <div className="flex items-center mb-2">
+                        <div className="flex items-center justify-center w-5 h-5 bg-green-100 text-green-600 rounded-full text-xs font-semibold mr-2">3</div>
+                        <h3 className="text-sm font-semibold text-gray-900">Confirm Appointment</h3>
+                      </div>
+
+                      <div className="bg-white rounded-md p-2 mb-2 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-green-600 rounded-md flex items-center justify-center">
+                              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <div className="text-xs font-semibold text-gray-900">
+                                {new Date(scheduledDate).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}
+                              </div>
+                              <div className="text-xs text-gray-600">at {selectedTimeSlot}</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-xs text-gray-500">ID</div>
+                            <div className="font-mono text-xs font-semibold text-gray-900">
+                              {inspectionId.substring(0, 6)}...
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={bookAppointment}
+                        disabled={appointmentLoading}
+                        className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-2 px-3 rounded-md transition-all duration-200 transform hover:scale-105 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-xs"
+                      >
+                        {appointmentLoading ? (
+                          <div className="flex items-center justify-center">
+                            <svg className="animate-spin -ml-1 mr-1 h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Confirming...
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Confirm Appointment
+                          </div>
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Error Messages */}
+                  {appointmentError && (
+                    <div className="bg-red-50 border border-red-200 rounded-md p-2 animate-fade-in">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <svg className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div className="ml-2">
+                          <h3 className="text-xs font-medium text-red-800">Booking Failed</h3>
+                          <div className="mt-1 text-xs text-red-700">
+                            <p>{appointmentError}</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
+                  )}
+
+                  {/* Success Messages */}
+                  {appointmentSuccess && (
+                    <div className="bg-green-50 border border-green-200 rounded-md p-2 animate-fade-in">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div className="ml-2">
+                          <h3 className="text-xs font-medium text-green-800">Appointment Booked!</h3>
+                          <div className="mt-1 text-xs text-green-700">
+                            <p className="font-semibold">Date: {new Date(scheduledDate).toLocaleDateString()}</p>
+                            <p>Time: {selectedTimeSlot}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Appointment Booked State */
+                <div className="text-center py-4">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full shadow-sm mb-3">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                   </div>
-                )}
-              </div>
-            ) : (
-              <div className="bg-green-50 border border-green-200 text-green-800 px-6 py-4 rounded-xl">
-                <div className="flex">
-                  <svg className="h-6 w-6 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <div className="ml-3">
-                    <p className="font-semibold">Appointment Booked Successfully!</p>
-                    <p>Date: {new Date(scheduledDate).toLocaleDateString()}</p>
-                    <p>Time: {selectedTimeSlot}</p>
-                    <p className="text-sm font-mono">Inspection ID: {inspectionId}</p>
+                  <h3 className="text-base font-bold text-gray-900 mb-1">Appointment Confirmed!</h3>
+                  <p className="text-xs text-gray-600 mb-3">
+                    Your inspection has been scheduled
+                  </p>
+
+                  <div className="bg-white rounded-md p-3 shadow-sm border border-gray-100 max-w-xs mx-auto">
+                    <div className="space-y-1.5 text-xs text-left">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Date:</span>
+                        <span className="font-semibold text-gray-900">
+                          {new Date(scheduledDate).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Time:</span>
+                        <span className="font-semibold text-gray-900">{selectedTimeSlot}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">ID:</span>
+                        <span className="font-mono text-xs font-semibold text-gray-900">
+                          {inspectionId}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Submit Button Section with Messages */}

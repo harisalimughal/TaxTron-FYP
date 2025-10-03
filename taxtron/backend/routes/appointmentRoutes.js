@@ -34,52 +34,65 @@ performAutoCleanup();
 // Set up automatic cleanup every 5 minutes
 setInterval(performAutoCleanup, 5 * 60 * 1000);
 
-// 📌 Get Available Appointment Dates
+// 📌 Get Available Appointment Dates and Time Slots
 router.get('/available', async (req, res) => {
   try {
     // Run cleanup before generating available dates
     await performAutoCleanup();
-    
+
+    // Define all available time slots
+    const allTimeSlots = ['09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM', '04:00 PM'];
+
     // Generate available dates for the next 30 days
     const availableDates = [];
     const today = new Date();
-    
+
     console.log('Generating available dates starting from:', today.toISOString());
-    
+
     for (let i = 1; i <= 30; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      
-      // Check if this date is already booked
-      const existingAppointment = await Appointment.findOne({
+
+      // Get all appointments for this date
+      const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+
+      const existingAppointments = await Appointment.find({
         scheduledDate: {
-          $gte: new Date(date.getFullYear(), date.getMonth(), date.getDate()),
-          $lt: new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1)
+          $gte: dayStart,
+          $lt: dayEnd
         },
         status: 'Booked'
       });
-      
-      if (!existingAppointment) {
+
+      // Check which time slots are still available
+      const bookedTimeSlots = existingAppointments.map(apt => apt.timeSlot);
+      const availableTimeSlots = allTimeSlots.filter(slot => !bookedTimeSlots.includes(slot));
+
+      if (availableTimeSlots.length > 0) {
         const dateString = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-        availableDates.push(dateString);
-        console.log('Available date:', dateString);
+        availableDates.push({
+          date: dateString,
+          availableTimeSlots: availableTimeSlots
+        });
+        console.log(`Available date: ${dateString} with ${availableTimeSlots.length} slots:`, availableTimeSlots);
       } else {
-        console.log('Date already booked:', date.toISOString().split('T')[0]);
+        console.log('Date fully booked:', date.toISOString().split('T')[0]);
       }
     }
-    
+
     console.log('Total available dates:', availableDates.length);
-    
+
     res.status(200).json({
       success: true,
       data: availableDates
     });
   } catch (error) {
     console.error('Error fetching available dates:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: 'Failed to fetch available dates', 
-      details: error.message 
+      error: 'Failed to fetch available dates',
+      details: error.message
     });
   }
 });

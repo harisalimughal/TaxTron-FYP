@@ -335,39 +335,30 @@ Admin can set this amount at: /admin/tax-management`);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
-      <div className="p-6 lg:p-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <button 
-              onClick={() => navigate(-1)}
-              className="flex items-center justify-center w-10 h-10 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Annual Vehicle Tax Payment</h1>
-              <p className="text-sm text-gray-600">Pay your annual vehicle tax as per Pakistan Excise system</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-6xl mx-auto">
-          {/* Tax Information Card */}
-          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-6">
-            <div className="flex items-start space-x-3">
-              <DollarSign className="w-6 h-6 text-blue-600 mt-0.5" />
+      {/* Header - Attached to upper wall */}
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow">
+        <div className="p-6 lg:p-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              </button>
               <div>
-                <h3 className="font-semibold text-blue-900 mb-2">Pakistan Annual Vehicle Tax</h3>
-                <div className="text-blue-800 space-y-1 text-sm">
-                  <p>• <strong>Annual Payment:</strong> Vehicle tax is due every year by January 31st</p>
-                  <p>• <strong>Calculation:</strong> Based on engine capacity, vehicle type, and age</p>
-                  <p>• <strong>Blockchain Payment:</strong> Secure payment through MetaMask wallet</p>
-                  <p>• <strong>Penalties:</strong> Late payment may incur additional charges</p>
-                </div>
+                <h1 className="text-2xl font-bold text-gray-900">Annual Vehicle Tax Payment</h1>
+                <p className="text-sm text-gray-600">Pay your annual vehicle tax as per Pakistan Excise system</p>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="p-6 lg:p-8 pt-0">
+        <div className="max-w-6xl mx-auto">
+          {/* Tax Information Card */}
 
           {/* Wallet Connection */}
           {!walletAddress && (
