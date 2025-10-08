@@ -1,0 +1,3 @@
+fullName,cnic,email,walletAddress,engineNumber,chassisNumber,make,model,variant,year,engineCapacity,fuelType,transmission,color,bodyType,seatingCapacity,registrationNumber
+Test User,12345-1234567-1,test@example.com,0x742d35Cc6634C0532925a3b8D0007A3a2c0e0f1a,ENG123,CHS456,Honda,Civic,Test,2023,1800,Petrol,Manual,White,Sedan,5,TEST123
+Test User2,12345-1234547-1,test@example2.com,0x742d35Cc6634C0532925a3b8D0007A3b2c0e0f1a,ENG125,CHS457,Honda,Civic,Test,2023,1800,Petrol,Manual,White,Sedan,5,TEST123

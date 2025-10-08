@@ -163,23 +163,23 @@ export default function AdminDashboard() {
             onClick={() => navigate('/admin/inspect')}
             className="text-white px-6 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center space-x-3 min-w-[200px] border border-blue-200/50"
             style={{
-              boxShadow: '8px 8px 16px rgba(59, 130, 246, 0.15), -8px -8px 16px rgba(147, 197, 253, 0.8)',
+              boxShadow: '4px 4px 8px rgba(59, 130, 246, 0.1), -4px -4px 8px rgba(147, 197, 253, 0.6)',
               background: 'linear-gradient(145deg, #3B82F6, #1D4ED8)'
             }}
             onMouseEnter={(e) => {
-              e.target.style.boxShadow = '12px 12px 24px rgba(59, 130, 246, 0.2), -12px -12px 24px rgba(147, 197, 253, 0.9)';
+              e.target.style.boxShadow = '6px 6px 12px rgba(59, 130, 246, 0.15), -6px -6px 12px rgba(147, 197, 253, 0.7)';
               e.target.style.background = 'linear-gradient(145deg, #1D4ED8, #3B82F6)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.boxShadow = '8px 8px 16px rgba(59, 130, 246, 0.15), -8px -8px 16px rgba(147, 197, 253, 0.8)';
+              e.target.style.boxShadow = '4px 4px 8px rgba(59, 130, 246, 0.1), -4px -4px 8px rgba(147, 197, 253, 0.6)';
               e.target.style.background = 'linear-gradient(145deg, #3B82F6, #1D4ED8)';
             }}
             onMouseDown={(e) => {
-              e.target.style.boxShadow = 'inset 4px 4px 8px rgba(30, 78, 216, 0.2), inset -4px -4px 8px rgba(147, 197, 253, 0.8)';
+              e.target.style.boxShadow = 'inset 2px 2px 4px rgba(30, 78, 216, 0.15), inset -2px -2px 4px rgba(147, 197, 253, 0.6)';
               e.target.style.transform = 'scale(0.98)';
             }}
             onMouseUp={(e) => {
-              e.target.style.boxShadow = '12px 12px 24px rgba(59, 130, 246, 0.2), -12px -12px 24px rgba(147, 197, 253, 0.9)';
+              e.target.style.boxShadow = '6px 6px 12px rgba(59, 130, 246, 0.15), -6px -6px 12px rgba(147, 197, 253, 0.7)';
               e.target.style.transform = 'scale(1.05)';
             }}
           >
@@ -195,23 +195,23 @@ export default function AdminDashboard() {
             onClick={() => navigate('/admin/tax-management')}
             className="text-white px-6 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center space-x-3 min-w-[200px] border border-green-200/50"
             style={{
-              boxShadow: '8px 8px 16px rgba(34, 197, 94, 0.15), -8px -8px 16px rgba(134, 239, 172, 0.8)',
+              boxShadow: '4px 4px 8px rgba(34, 197, 94, 0.1), -4px -4px 8px rgba(134, 239, 172, 0.6)',
               background: 'linear-gradient(145deg, #22C55E, #16A34A)'
             }}
             onMouseEnter={(e) => {
-              e.target.style.boxShadow = '12px 12px 24px rgba(34, 197, 94, 0.2), -12px -12px 24px rgba(134, 239, 172, 0.9)';
+              e.target.style.boxShadow = '6px 6px 12px rgba(34, 197, 94, 0.15), -6px -6px 12px rgba(134, 239, 172, 0.7)';
               e.target.style.background = 'linear-gradient(145deg, #16A34A, #22C55E)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.boxShadow = '8px 8px 16px rgba(34, 197, 94, 0.15), -8px -8px 16px rgba(134, 239, 172, 0.8)';
+              e.target.style.boxShadow = '4px 4px 8px rgba(34, 197, 94, 0.1), -4px -4px 8px rgba(134, 239, 172, 0.6)';
               e.target.style.background = 'linear-gradient(145deg, #22C55E, #16A34A)';
             }}
             onMouseDown={(e) => {
-              e.target.style.boxShadow = 'inset 4px 4px 8px rgba(22, 163, 74, 0.2), inset -4px -4px 8px rgba(134, 239, 172, 0.8)';
+              e.target.style.boxShadow = 'inset 2px 2px 4px rgba(22, 163, 74, 0.15), inset -2px -2px 4px rgba(134, 239, 172, 0.6)';
               e.target.style.transform = 'scale(0.98)';
             }}
             onMouseUp={(e) => {
-              e.target.style.boxShadow = '12px 12px 24px rgba(34, 197, 94, 0.2), -12px -12px 24px rgba(134, 239, 172, 0.9)';
+              e.target.style.boxShadow = '6px 6px 12px rgba(34, 197, 94, 0.15), -6px -6px 12px rgba(134, 239, 172, 0.7)';
               e.target.style.transform = 'scale(1.05)';
             }}
           >
@@ -227,23 +227,23 @@ export default function AdminDashboard() {
             onClick={() => navigate('/admin/transfer-management')}
             className="text-white px-6 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center space-x-3 min-w-[200px] border border-purple-200/50"
             style={{
-              boxShadow: '8px 8px 16px rgba(147, 51, 234, 0.15), -8px -8px 16px rgba(196, 181, 253, 0.8)',
+              boxShadow: '4px 4px 8px rgba(147, 51, 234, 0.1), -4px -4px 8px rgba(196, 181, 253, 0.6)',
               background: 'linear-gradient(145deg, #9333EA, #7C3AED)'
             }}
             onMouseEnter={(e) => {
-              e.target.style.boxShadow = '12px 12px 24px rgba(147, 51, 234, 0.2), -12px -12px 24px rgba(196, 181, 253, 0.9)';
+              e.target.style.boxShadow = '6px 6px 12px rgba(147, 51, 234, 0.15), -6px -6px 12px rgba(196, 181, 253, 0.7)';
               e.target.style.background = 'linear-gradient(145deg, #7C3AED, #9333EA)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.boxShadow = '8px 8px 16px rgba(147, 51, 234, 0.15), -8px -8px 16px rgba(196, 181, 253, 0.8)';
+              e.target.style.boxShadow = '4px 4px 8px rgba(147, 51, 234, 0.1), -4px -4px 8px rgba(196, 181, 253, 0.6)';
               e.target.style.background = 'linear-gradient(145deg, #9333EA, #7C3AED)';
             }}
             onMouseDown={(e) => {
-              e.target.style.boxShadow = 'inset 4px 4px 8px rgba(124, 58, 237, 0.2), inset -4px -4px 8px rgba(196, 181, 253, 0.8)';
+              e.target.style.boxShadow = 'inset 2px 2px 4px rgba(124, 58, 237, 0.15), inset -2px -2px 4px rgba(196, 181, 253, 0.6)';
               e.target.style.transform = 'scale(0.98)';
             }}
             onMouseUp={(e) => {
-              e.target.style.boxShadow = '12px 12px 24px rgba(147, 51, 234, 0.2), -12px -12px 24px rgba(196, 181, 253, 0.9)';
+              e.target.style.boxShadow = '6px 6px 12px rgba(147, 51, 234, 0.15), -6px -6px 12px rgba(196, 181, 253, 0.7)';
               e.target.style.transform = 'scale(1.05)';
             }}
           >
@@ -254,10 +254,40 @@ export default function AdminDashboard() {
             </div>
             <span>Transfer Management</span>
           </button>
+
+          <button
+            onClick={() => navigate('/admin/bulk-import')}
+            className="text-white px-6 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center space-x-3 min-w-[200px] border border-orange-200/50"
+            style={{
+              boxShadow: '4px 4px 8px rgba(249, 115, 22, 0.1), -4px -4px 8px rgba(251, 191, 36, 0.6)',
+              background: 'linear-gradient(145deg, #F97316, #EA580C)'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.boxShadow = '6px 6px 12px rgba(249, 115, 22, 0.15), -6px -6px 12px rgba(251, 191, 36, 0.7)';
+              e.target.style.background = 'linear-gradient(145deg, #EA580C, #F97316)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.boxShadow = '4px 4px 8px rgba(249, 115, 22, 0.1), -4px -4px 8px rgba(251, 191, 36, 0.6)';
+              e.target.style.background = 'linear-gradient(145deg, #F97316, #EA580C)';
+            }}
+            onMouseDown={(e) => {
+              e.target.style.boxShadow = 'inset 2px 2px 4px rgba(234, 88, 12, 0.15), inset -2px -2px 4px rgba(251, 191, 36, 0.6)';
+              e.target.style.transform = 'scale(0.98)';
+            }}
+            onMouseUp={(e) => {
+              e.target.style.boxShadow = '6px 6px 12px rgba(249, 115, 22, 0.15), -6px -6px 12px rgba(251, 191, 36, 0.7)';
+              e.target.style.transform = 'scale(1.05)';
+            }}
+          >
+            <div className="p-2 bg-white/20 rounded-lg">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+              </svg>
+            </div>
+            <span>Bulk Import</span>
+          </button>
         </div>
       </div>
-
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <div className="space-y-8">
           {/* Stats Cards */}
@@ -321,23 +351,23 @@ export default function AdminDashboard() {
                   onClick={fetchAppointments}
                   className="text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 border border-gray-200/50"
                   style={{
-                    boxShadow: '4px 4px 8px rgba(0, 0, 0, 0.1), -4px -4px 8px rgba(255, 255, 255, 0.9)',
+                    boxShadow: '2px 2px 4px rgba(0, 0, 0, 0.1), -2px -2px 4px rgba(255, 255, 255, 0.9)',
                     background: 'linear-gradient(145deg, #f8f9fa, #e9ecef)'
                   }}
                   onMouseEnter={(e) => {
-                    e.target.style.boxShadow = '6px 6px 12px rgba(0, 0, 0, 0.15), -6px -6px 12px rgba(255, 255, 255, 1)';
+                    e.target.style.boxShadow = '3px 3px 6px rgba(0, 0, 0, 0.15), -3px -3px 6px rgba(255, 255, 255, 1)';
                     e.target.style.background = 'linear-gradient(145deg, #e9ecef, #f8f9fa)';
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.boxShadow = '4px 4px 8px rgba(0, 0, 0, 0.1), -4px -4px 8px rgba(255, 255, 255, 0.9)';
+                    e.target.style.boxShadow = '2px 2px 4px rgba(0, 0, 0, 0.1), -2px -2px 4px rgba(255, 255, 255, 0.9)';
                     e.target.style.background = 'linear-gradient(145deg, #f8f9fa, #e9ecef)';
                   }}
                   onMouseDown={(e) => {
-                    e.target.style.boxShadow = 'inset 2px 2px 4px rgba(0, 0, 0, 0.1), inset -2px -2px 4px rgba(255, 255, 255, 0.9)';
+                    e.target.style.boxShadow = 'inset 1px 1px 2px rgba(0, 0, 0, 0.1), inset -1px -1px 2px rgba(255, 255, 255, 0.9)';
                     e.target.style.transform = 'scale(0.98)';
                   }}
                   onMouseUp={(e) => {
-                    e.target.style.boxShadow = '6px 6px 12px rgba(0, 0, 0, 0.15), -6px -6px 12px rgba(255, 255, 255, 1)';
+                    e.target.style.boxShadow = '3px 3px 6px rgba(0, 0, 0, 0.15), -3px -3px 6px rgba(255, 255, 255, 1)';
                     e.target.style.transform = 'scale(1.05)';
                   }}
                   title="Refresh appointments"

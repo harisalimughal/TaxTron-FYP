@@ -25,6 +25,7 @@ import UserInspections from "./components/UserInspections";
 import AdminTaxManagement from "./components/AdminTaxManagement";
 import AdminTransferManagement from "./components/AdminTransferManagement";
 import MyVehicles from "./components/MyVehicles";
+import BulkImport from "./components/BulkImport";
 
 // Create a separate component for routes that uses auth context
 const AppRoutes = () => {
@@ -110,6 +111,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <AdminTransferManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route 
+        path="/admin/bulk-import" 
+        element={
+          <ProtectedRoute>
+            <BulkImport />
           </ProtectedRoute>
         }
       />

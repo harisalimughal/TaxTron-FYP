@@ -1,0 +1,8 @@
+fullName,cnic,email,walletAddress,engineNumber,chassisNumber,make,model,variant,year,engineCapacity,fuelType,transmission,color,bodyType,seatingCapacity,registrationNumber
+Ahmed Hassan,35202-1234567-1,ahmed.hassan@email.com,0x742d35Cc6634C0532925a3b8D0007A3a2c0e0f1a,R18A1-123456,JHMFA1F80AS123456,Honda,Civic,1.8L VTi Oriel,2023,1798,Petrol,Automatic,Pearl White,Sedan,5,ABC-123
+Fatima Khan,37405-9876543-2,fatima.khan@email.com,0x8ba1f109d8d4c2c2e8a1f8c2d9e4b5a3c7e1f2ab,R15B7-789123,1HGBH41JXMN109186,Toyota,Corolla,1.8L Altis Grande,2023,1798,Petrol,Automatic,Super White,Sedan,5,XYZ-456
+Usman Ahmed,33100-4567890-3,usman.ahmed@email.com,0x1f3e2d4c5b6a7988c7d6e5f4a3b2c1d0e9f8a7b4,R20A1-456789,WBAFR7C50BC123789,BMW,3 Series,320i Luxury Line,2023,1998,Petrol,Automatic,Alpine White,Sedan,5,BMW-789
+Ayesha Ali,35201-2345678-4,ayesha.ali@email.com,"0x5f4e3d2c1b0a9f8e7d6c5b4a3a2b1c0d9e8f7a6b
+",K20A1-234567,WAUZZZ8V9HA123456,Audi,A4,2.0T Premium,2022,1984,Petrol,Automatic,Mythos Black,Sedan,5,AUD-234
+Bilal Sheikh,37406-7890123-5,bilal.sheikh@email.com,"0x5f4e3d2c1b0a9f8e7d6c5b4a3a2b1c0d9e8f7a6b
+",L13B1-789012,1FA6P8CF0F1234567,Ford,Mustang,2.3L EcoBoost,2023,2261,Petrol,Automatic,Magnetic Gray,Coupe,4,FORD-567
