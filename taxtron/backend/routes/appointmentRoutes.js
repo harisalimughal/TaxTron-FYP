@@ -112,38 +112,32 @@ router.post('/book', async (req, res) => {
       });
     }
     
-    // Check if the date is still available
+    // Check if the specific time slot is still available
     const existingAppointment = await Appointment.findOne({
       scheduledDate: {
         $gte: new Date(date),
         $lt: new Date(new Date(date).getTime() + 24 * 60 * 60 * 1000)
       },
+      timeSlot: timeSlot,
       status: 'Booked'
     });
     
     if (existingAppointment) {
       return res.status(400).json({
         success: false,
-        message: 'This date is no longer available'
+        message: 'This time slot is no longer available'
       });
     }
     
-    // Create or update appointment
-    const appointment = await Appointment.findOneAndUpdate(
-      {
-        scheduledDate: {
-          $gte: new Date(date),
-          $lt: new Date(new Date(date).getTime() + 24 * 60 * 60 * 1000)
-        }
-      },
-      {
-        scheduledDate: new Date(date),
-        status: 'Booked',
-        inspectionId: inspectionId,
-        timeSlot: timeSlot
-      },
-      { upsert: true, new: true }
-    );
+    // Create new appointment (don't update existing ones)
+    const appointment = new Appointment({
+      scheduledDate: new Date(date),
+      status: 'Booked',
+      inspectionId: inspectionId,
+      timeSlot: timeSlot
+    });
+    
+    await appointment.save();
     
     res.status(200).json({
       success: true,

@@ -22,8 +22,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = () => {
-    // Set a token in localStorage to persist login state
-    localStorage.setItem('adminToken', 'admin-logged-in');
+    // Don't overwrite the token - it should already be set by the login component
     setIsLoggedIn(true);
   };
 

@@ -4,7 +4,7 @@ const Inspection = require('../models/inspection');
 const User = require('../models/user');
 const OwnershipTransfer = require('../models/ownershipTransfer');
 const OwnershipHistory = require('../models/ownershipHistory');
-const { authenticateUser } = require('../middleware/auth');
+const { authenticateUser, adminAuth } = require('../middleware/auth');
 
 // Search vehicle by chassis number
 router.get('/search-vehicle/:chassisNumber', authenticateUser, async (req, res) => {
@@ -677,8 +677,10 @@ router.get('/my-transfers', authenticateUser, async (req, res) => {
 });
 
 // Admin: Get pending transfers for approval
-router.get('/admin/pending-transfers', authenticateUser, async (req, res) => {
+router.get('/admin/pending-transfers', adminAuth, async (req, res) => {
   try {
+    console.log('Admin pending transfers endpoint hit');
+    console.log('Admin ID from token:', req.adminId);
     // Note: In a real app, you'd check if user is admin
     // For now, we'll assume this endpoint is protected by admin middleware
     
@@ -729,7 +731,7 @@ router.get('/admin/pending-transfers', authenticateUser, async (req, res) => {
 });
 
 // Admin: Approve transfer
-router.post('/admin/approve/:transferId', authenticateUser, async (req, res) => {
+router.post('/admin/approve/:transferId', adminAuth, async (req, res) => {
   try {
     const { transferId } = req.params;
     const { adminNotes } = req.body;
@@ -773,7 +775,7 @@ router.post('/admin/approve/:transferId', authenticateUser, async (req, res) => 
 });
 
 // Admin: Reject transfer
-router.post('/admin/reject/:transferId', authenticateUser, async (req, res) => {
+router.post('/admin/reject/:transferId', adminAuth, async (req, res) => {
   try {
     const { transferId } = req.params;
     const { rejectionReason } = req.body;

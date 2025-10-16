@@ -30,7 +30,7 @@ const AdminTransferManagement = () => {
     setError('');
 
     try {
-      const token = localStorage.getItem('userToken');
+      const token = localStorage.getItem('adminToken');
       const response = await axios.get('/api/ownership-transfer/admin/pending-transfers', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -62,7 +62,7 @@ const AdminTransferManagement = () => {
     setError('');
 
     try {
-      const token = localStorage.getItem('userToken');
+      const token = localStorage.getItem('adminToken');
       const endpoint = action === 'approve' 
         ? `/api/ownership-transfer/admin/approve/${selectedTransfer.transferId}`
         : `/api/ownership-transfer/admin/reject/${selectedTransfer.transferId}`;
